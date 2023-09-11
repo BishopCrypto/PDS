@@ -62,10 +62,11 @@ async function getUserAccessKey() {
     await page.setExtraHTTPHeaders({
         'Accept-Language': 'en-US,en;q=0.9'
     });
+    page.setDefaultNavigationTimeout(0);
 
     console.log('Going to website URL...');
-    await page.goto(websiteUrl);
-    await page.waitForTimeout(5000); // Wait for 2 seconds
+    await page.goto(websiteUrl, { waitUntil: 'load', timeout: 0 });
+    // await page.waitForTimeout(2000); // Wait for 2 seconds
 
     console.log('Typing username...');
     await page.type('#UserName', masterUser);
@@ -77,7 +78,7 @@ async function getUserAccessKey() {
     await page.click('#LoginButton');
 
     console.log('Adding delay for page load...');
-    await page.waitForTimeout(5000); // Wait for 2 seconds
+    await page.waitForTimeout(2000); // Wait for 2 seconds
 
     const userAccessKey = await page.evaluate((id) => {
         return document.getElementById(id).value;
@@ -93,9 +94,12 @@ function findURLs(data) {
     const URLs = [];
 
     function traverse(node) {
-        if (node.URL) {
-            URLs.push(node.URL);
+        if (node.URL && node.URL != "") {
+            if (URLs.indexOf(node.URL) == -1) {
+                URLs.push(node.URL);
+            }
         }
+
         if (node.children && node.children.length > 0) {
             for (const child of node.children) {
                 traverse(child);
