@@ -124,16 +124,20 @@ async function fetchData(url) {
     return [];
 }
 
-async function downloadPdf(url) {
+async function downloadPdf(url, cession=true) {
     try {
-        console.log('Fetching: ', url);
+        // console.log('Fetching: ', url);
         const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
         const buffer = Buffer.from(response.data, 'binary');
-        const dir = './downloads/';
-
-        await fs.mkdir(dir, { recursive: true });
         const parts = url.split('/');
-        let filename = `${parts[5].substring(0, 7)}_${parts[2]}_${parts[6]}`;
+        let dir = `./downloads/${parts[5]}`;
+        if (cession){
+            dir = `./downloads/cession/${parts[5]}`
+        } else {
+            dir = `./downloads/trust/${parts[5]}`
+        }
+        await fs.mkdir(dir, { recursive: true });
+        let filename = `${parts[2]}_${parts[6]}`;
         filename = filename.replace('-', '_');
         filename = filename.replace(' ', '_');
         filename = filename.replace('.pdf', '');
@@ -145,8 +149,8 @@ async function downloadPdf(url) {
         const [copiedPage] = await pdfDocSingle.copyPages(pdfDoc, [pageCount - 1]);
         pdfDocSingle.addPage(copiedPage);
         const pdfBytesSingle = await pdfDocSingle.save();
-        await fs.writeFile(`./downloads/${filename}_last_page.pdf`, pdfBytesSingle);
-        console.log(`./downloads/${filename}_last_page.pdf`);
+        await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
+        // console.log(`${dir}/${filename}_last_page.pdf`);
     } catch (error) {
         return '';
     }
@@ -157,23 +161,37 @@ async function main() {
     console.log(uak)
 
     const directories = [
-        'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts'
+        'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
     ];
 
     let skipped_urls = [];
     for (let i = 0; i < year_month_list.length; i++) {
         const ym = year_month_list[i];
-        const m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
+        console.log(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
+        console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+        const m_cessionUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
+        const m_trustUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
 
-        for (let idx = 0; idx < m_urls.length; idx++) {
-            const parts = m_urls[idx].split('/');
+        for (let idx = 0; idx < m_cessionUrls.length; idx++) {
+            const parts = m_cessionUrls[idx].split('/');
 
             if (directories.indexOf(parts[4]) == -1) {
-                skipped_urls = [...skipped_urls, m_urls[idx]];
+                skipped_urls = [...skipped_urls, m_cessionUrls[idx]];
                 continue;
             }
 
-            await downloadPdf(m_urls[idx]);
+            await downloadPdf(m_cessionUrls[idx]);
+        }
+
+        for (let idx = 0; idx < m_trustUrls.length; idx++) {
+            const parts = m_trustUrls[idx].split('/');
+
+            if (directories.indexOf(parts[4]) == -1) {
+                skipped_urls = [...skipped_urls, m_trustUrls[idx]];
+                continue;
+            }
+
+            await downloadPdf(m_trustUrls[idx], false);
         }
     }
 
@@ -181,6 +199,9 @@ async function main() {
     fs.writeFile('SkippedUrls.txt', content, error => {
         console.log(error)
     });
+
+    console.log('Done')
+
 }
 
 main();
