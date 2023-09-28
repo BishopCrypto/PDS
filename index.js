@@ -134,23 +134,29 @@ async function downloadPdf(url, cession=true) {
         if (cession){
             dir = `./downloads/cession/${parts[5]}`
         } else {
-            dir = `./downloads/trust/${parts[5]}`
+            dir = `./downloads/trust/${parts[5]}/${parts[6].split(' ')[3]}/`
+
         }
         await fs.mkdir(dir, { recursive: true });
         let filename = `${parts[2]}_${parts[6]}`;
         filename = filename.replace('-', '_');
         filename = filename.replace(' ', '_');
         filename = filename.replace('.pdf', '');
+        
         // await fs.writeFile(dir + filename, buffer);
 
-        const pdfDoc = await PDFDocument.load(buffer);
-        const pageCount = pdfDoc.getPageCount();
-        const pdfDocSingle = await PDFDocument.create();
-        const [copiedPage] = await pdfDocSingle.copyPages(pdfDoc, [pageCount - 1]);
-        pdfDocSingle.addPage(copiedPage);
-        const pdfBytesSingle = await pdfDocSingle.save();
-        await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
-        // console.log(`${dir}/${filename}_last_page.pdf`);
+        if (cession) {
+            const pdfDoc = await PDFDocument.load(buffer);
+            const pageCount = pdfDoc.getPageCount();
+            const pdfDocSingle = await PDFDocument.create();
+            const [copiedPage] = await pdfDocSingle.copyPages(pdfDoc, [pageCount - 1]);
+            pdfDocSingle.addPage(copiedPage);
+            const pdfBytesSingle = await pdfDocSingle.save();
+            await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
+            // console.log(`${dir}/${filename}_last_page.pdf`);
+        } else {
+            await fs.writeFile(`${dir}/${filename}.pdf`, buffer);
+        }
     } catch (error) {
         return '';
     }
@@ -169,19 +175,19 @@ async function main() {
         const ym = year_month_list[i];
         console.log(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
         console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
-        const m_cessionUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
+        //const m_cessionUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
         const m_trustUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
 
-        for (let idx = 0; idx < m_cessionUrls.length; idx++) {
-            const parts = m_cessionUrls[idx].split('/');
+        // for (let idx = 0; idx < m_cessionUrls.length; idx++) {
+        //     const parts = m_cessionUrls[idx].split('/');
 
-            if (directories.indexOf(parts[4]) == -1) {
-                skipped_urls = [...skipped_urls, m_cessionUrls[idx]];
-                continue;
-            }
+        //     if (directories.indexOf(parts[4]) == -1) {
+        //         skipped_urls = [...skipped_urls, m_cessionUrls[idx]];
+        //         continue;
+        //     }
 
-            await downloadPdf(m_cessionUrls[idx]);
-        }
+        //     await downloadPdf(m_cessionUrls[idx]);
+        // }
 
         for (let idx = 0; idx < m_trustUrls.length; idx++) {
             const parts = m_trustUrls[idx].split('/');
@@ -194,14 +200,11 @@ async function main() {
             await downloadPdf(m_trustUrls[idx], false);
         }
     }
-
+    console.log('Done')
     const content = skipped_urls.join('\n');
     fs.writeFile('SkippedUrls.txt', content, error => {
         console.log(error)
     });
-
-    console.log('Done')
-
 }
 
 main();
