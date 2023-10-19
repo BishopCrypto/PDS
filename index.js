@@ -45,6 +45,26 @@ for (let date = startDate; date <= endDate; date.setMonth(date.getMonth() + 1)) 
     year_month_list.push(dString)
 }
 
+console.log(year_month_list)
+
+const filePath = './filter.csv';
+const csv = require('csv-parser');
+
+const results = [];
+const filters = []
+fsnp.createReadStream(filePath)
+    .pipe(csv())
+    .on('data', (data) => results.push(data))
+    .on('end', () => {
+        // Process the data here
+        results.map(record => {
+                if (record['To be uploaded'] == 'YES') {
+                    filters.push(record)
+                }
+            })
+            //console.log(filters);
+    });
+// return;
 async function getUserAccessKey() {
     const browser = await puppeteer.launch({
         headless: false,
@@ -123,39 +143,75 @@ async function fetchData(url) {
 
     return [];
 }
+const stringContainsPattern = (inputString) => {
+    const pattern = /20\d{2}_\d{2}/; // Regular expression pattern
 
-async function downloadPdf(url, cession=true) {
+    return pattern.test(inputString);
+};
+let ttcount = 0
+async function downloadPdf(url, cession = true) {
     try {
         // console.log('Fetching: ', url);
-        const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
-        const buffer = Buffer.from(response.data, 'binary');
+
         const parts = url.split('/');
-        let dir = `./downloads/${parts[5]}`;
-        if (cession){
-            dir = `./downloads/cession/${parts[5]}`
-        } else {
-            dir = `./downloads/trust/${parts[5]}/${parts[6].split(' ')[3]}/`
 
+        let isCorrect = false;
+        for (let i = 0; i < filters.length; i++) {
+            let a = parts[2];
+            let b = filters[i]['PDS Client Code'];
+            let c = parts[6];
+            let d = filters[i]['PDS Product Code'];
+
+            c = c.replace('.pdf', '').replace('-', '').replace(' ', '').replace('_', '')
+            d = d.replace('-', '').replace(' ', '').replace('_', '')
+
+            if (a == b && c == d) {
+                isCorrect = true;
+                console.log(a, b, c, d)
+                break;
+            }
         }
-        await fs.mkdir(dir, { recursive: true });
-        let filename = `${parts[2]}_${parts[6]}`;
-        filename = filename.replace('-', '_');
-        filename = filename.replace(' ', '_');
-        filename = filename.replace('.pdf', '');
-        
-        // await fs.writeFile(dir + filename, buffer);
 
-        if (cession) {
-            const pdfDoc = await PDFDocument.load(buffer);
-            const pageCount = pdfDoc.getPageCount();
-            const pdfDocSingle = await PDFDocument.create();
-            const [copiedPage] = await pdfDocSingle.copyPages(pdfDoc, [pageCount - 1]);
-            pdfDocSingle.addPage(copiedPage);
-            const pdfBytesSingle = await pdfDocSingle.save();
-            await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
-            // console.log(`${dir}/${filename}_last_page.pdf`);
-        } else {
-            await fs.writeFile(`${dir}/${filename}.pdf`, buffer);
+        if (isCorrect) {
+            ttcount++;
+            console.log(ttcount)
+            let dir = `./downloads/${parts[5]}`;
+            if (cession) {
+                dir = `./downloads/cession/${parts[5]}`
+            } else {
+                let sub_parts = parts[6].split(' ');
+                let sub_dir = '';
+                for (let i = 0; i < sub_parts.length; i++) {
+                    if (stringContainsPattern(sub_parts[i])) {
+                        sub_dir = sub_parts[i]
+                        break
+
+                    }
+                }
+                dir = `./downloads/trust/${parts[5]}/${sub_dir}/`
+            }
+            await fs.mkdir(dir, { recursive: true });
+            let filename = `${parts[2]}_${parts[6]}`;
+            filename = filename.replace('-', '_');
+            filename = filename.replace(' ', '_');
+            filename = filename.replace('.pdf', '');
+
+            const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
+            const buffer = Buffer.from(response.data, 'binary');
+            await fs.writeFile(dir + filename, buffer);
+
+            if (cession) {
+                const pdfDoc = await PDFDocument.load(buffer);
+                const pageCount = pdfDoc.getPageCount();
+                const pdfDocSingle = await PDFDocument.create();
+                const [copiedPage] = await pdfDocSingle.copyPages(pdfDoc, [pageCount - 1]);
+                pdfDocSingle.addPage(copiedPage);
+                const pdfBytesSingle = await pdfDocSingle.save();
+                await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
+                // console.log(`${dir}/${filename}_last_page.pdf`);
+            } else {
+                await fs.writeFile(`${dir}/${filename}.pdf`, buffer);
+            }
         }
     } catch (error) {
         return '';
@@ -174,7 +230,7 @@ async function main() {
     for (let i = 0; i < year_month_list.length; i++) {
         const ym = year_month_list[i];
         console.log(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
-        console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+        //console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
         //const m_cessionUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
         const m_trustUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
 
