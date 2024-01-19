@@ -13,30 +13,51 @@ const websiteUrl = 'https://www.pdsadm.com/PAnet/Account/Login';
 
 const args = process.argv;
 // console.log(process.argv)
-// const args = ['', '', '202306', '202308']
+//const args = ['', '', 'trust','202309']
+
+function showsHelp(){
+    console.error(`Usage: node ./index.js <type> <start_date> [end_date] \n\n'Type' can be 'cession' or 'trust'.\n End Date is optional.`);
+    console.error('Example: node ./index.js trust 202309 202312');
+    console.error('Example: node ./index.js cession 202309');
+    process.exit(1);
+}
 
 if (args.length == 0) {
-    console.error('Usage: node ./index.js <type> <start_date> [end_date]');
-    process.exit(1);
+    showsHelp();
 }
 
 const masterUser = 'RALPDS',
     masterPw = 'reinsassoc';
 
 let type = args[2];
+if (type !== 'cession' && type!=='trust')
+    showsHelp();
 
 console.log(args.length)
 
 const year_month_list = []
 let startDate, endDate;
 
+function isValidDate(dateString) {
+    const timestamp = Date.parse(dateString);
+    return !isNaN(timestamp);
+}
+
 if (args.length >= 4) {
-    const [startMonth, startYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
-    startDate = new Date(startYear, startMonth - 1);
+    if (isValidDate(args[3].substring(4))){
+        const [startMonth, startYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
+        startDate = new Date(startYear, startMonth - 1);
+    } else {
+        showsHelp();
+    }
 }
 if (args.length >= 5) {
-    const [endMonth, endYear] = [Number(args[4].substring(4)), Number(args[4].substring(0, 4))];
-    endDate = new Date(endYear, endMonth - 1);
+    if (isValidDate(args[4].substring(4))){
+        const [endMonth, endYear] = [Number(args[4].substring(4)), Number(args[4].substring(0, 4))];
+        endDate = new Date(endYear, endMonth - 1);
+    } else {
+        showsHelp(); 
+    }
 } else {
     endDate = new Date();
     endDate.setMonth(endDate.getMonth() - 1);
@@ -44,9 +65,10 @@ if (args.length >= 5) {
 
 for (let date = startDate; date <= endDate; date.setMonth(date.getMonth() + 1)) {
     const d = new Date(date);
-    let dString = `${d.getFullYear()} ${d.getMonth() + 1}`;
-    dString = dString.replace(/(\d{4}) (\d{1})/, "$10$2");
-    year_month_list.push(dString)
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const dString = `${year}${month}`;
+    year_month_list.push(dString);
 }
 
 console.log(year_month_list)
@@ -155,7 +177,7 @@ const stringContainsPattern = (inputString) => {
 let ttcount = 0
 async function downloadPdf(url, type = 'cession') {
     try {
-        // console.log('Fetching: ', url);
+        console.log('Fetching: ', url);
 
         const parts = url.split('/');
 
@@ -168,12 +190,22 @@ async function downloadPdf(url, type = 'cession') {
 
             c = c.replace('.pdf', '').replace('-', '').replace(' ', '').replace('_', '')
             d = d.replace('-', '').replace(' ', '').replace('_', '')
-
-            if (a == b && c == d) {
-                isCorrect = true;
-                console.log(a, b, c, d)
-                break;
+            // console.log(a, b, c, d)
+            if (type == 'cession') {
+                if (a == b && c == d) {
+                    isCorrect = true;
+                                
+                    break;
+                }
+            } else {
+                if (a == b) {
+                    //if (a == b && c == d) {
+                        isCorrect = true;
+                        
+                        break;
+                    }
             }
+            
         }
 
         if (isCorrect) {
@@ -182,7 +214,7 @@ async function downloadPdf(url, type = 'cession') {
             let dir = `./downloads/${parts[5]}`;
             if (type == 'cession') {
                 dir = `./downloads/cession/${parts[5]}`
-            } else {
+            } else if (type == 'trust'){
                 let sub_parts = parts[6].split(' ');
                 let sub_dir = '';
                 for (let i = 0; i < sub_parts.length; i++) {
@@ -202,7 +234,7 @@ async function downloadPdf(url, type = 'cession') {
 
             const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
             const buffer = Buffer.from(response.data, 'binary');
-            await fs.writeFile(dir + filename, buffer);
+            // await fs.writeFile(`${dir}/${filename}_tmp`, buffer);
 
             if (type == 'cession') {
                 const pdfDoc = await PDFDocument.load(buffer);
@@ -226,7 +258,7 @@ async function main() {
     const uak = await getUserAccessKey();
     console.log(uak)
 
-    const directories = [
+    let directories = [
         'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
     ];
 
@@ -238,9 +270,14 @@ async function main() {
         let m_urls;
         if (type == 'cession') {
             m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
-            
+            directories = [
+                'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts'
+            ];
         } else if (type == 'trust') {
             m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+            directories = [
+                'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
+            ];  
         }
 
         for (let idx = 0; idx < m_urls.length; idx++) {
