@@ -16,22 +16,26 @@ const args = process.argv;
 // const args = ['', '', '202306', '202308']
 
 if (args.length == 0) {
-    console.error('Usage: node ./index.js <start_date> [end_date]');
+    console.error('Usage: node ./index.js <type> <start_date> [end_date]');
     process.exit(1);
 }
 
 const masterUser = 'RALPDS',
     masterPw = 'reinsassoc';
 
+let type = args[2];
+
+console.log(args.length)
 
 const year_month_list = []
 let startDate, endDate;
-if (args.length >= 3) {
-    const [startMonth, startYear] = [Number(args[2].substring(4)), Number(args[2].substring(0, 4))];
+
+if (args.length >= 4) {
+    const [startMonth, startYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
     startDate = new Date(startYear, startMonth - 1);
 }
-if (args.length >= 4) {
-    const [endMonth, endYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
+if (args.length >= 5) {
+    const [endMonth, endYear] = [Number(args[4].substring(4)), Number(args[4].substring(0, 4))];
     endDate = new Date(endYear, endMonth - 1);
 } else {
     endDate = new Date();
@@ -149,7 +153,7 @@ const stringContainsPattern = (inputString) => {
     return pattern.test(inputString);
 };
 let ttcount = 0
-async function downloadPdf(url, cession = true) {
+async function downloadPdf(url, type = 'cession') {
     try {
         // console.log('Fetching: ', url);
 
@@ -176,7 +180,7 @@ async function downloadPdf(url, cession = true) {
             ttcount++;
             console.log(ttcount)
             let dir = `./downloads/${parts[5]}`;
-            if (cession) {
+            if (type == 'cession') {
                 dir = `./downloads/cession/${parts[5]}`
             } else {
                 let sub_parts = parts[6].split(' ');
@@ -200,7 +204,7 @@ async function downloadPdf(url, cession = true) {
             const buffer = Buffer.from(response.data, 'binary');
             await fs.writeFile(dir + filename, buffer);
 
-            if (cession) {
+            if (type == 'cession') {
                 const pdfDoc = await PDFDocument.load(buffer);
                 const pageCount = pdfDoc.getPageCount();
                 const pdfDocSingle = await PDFDocument.create();
@@ -229,33 +233,28 @@ async function main() {
     let skipped_urls = [];
     for (let i = 0; i < year_month_list.length; i++) {
         const ym = year_month_list[i];
-        console.log(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
-        //console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
-        //const m_cessionUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
-        const m_trustUrls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+        // console.log(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
+        // console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+        let m_urls;
+        if (type == 'cession') {
+            m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
+            
+        } else if (type == 'trust') {
+            m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+        }
 
-        // for (let idx = 0; idx < m_cessionUrls.length; idx++) {
-        //     const parts = m_cessionUrls[idx].split('/');
-
-        //     if (directories.indexOf(parts[4]) == -1) {
-        //         skipped_urls = [...skipped_urls, m_cessionUrls[idx]];
-        //         continue;
-        //     }
-
-        //     await downloadPdf(m_cessionUrls[idx]);
-        // }
-
-        for (let idx = 0; idx < m_trustUrls.length; idx++) {
-            const parts = m_trustUrls[idx].split('/');
+        for (let idx = 0; idx < m_urls.length; idx++) {
+            const parts = m_urls[idx].split('/');
 
             if (directories.indexOf(parts[4]) == -1) {
-                skipped_urls = [...skipped_urls, m_trustUrls[idx]];
+                skipped_urls = [...skipped_urls, m_urls[idx]];
                 continue;
             }
 
-            await downloadPdf(m_trustUrls[idx], false);
-        }
+            await downloadPdf(m_urls[idx], type);
+        }    
     }
+
     console.log('Done')
     const content = skipped_urls.join('\n');
     fs.writeFile('SkippedUrls.txt', content, error => {
