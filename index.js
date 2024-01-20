@@ -11,9 +11,9 @@ const rl = readline.createInterface({
 const { PDFDocument } = require('pdf-lib');
 const websiteUrl = 'https://www.pdsadm.com/PAnet/Account/Login';
 
-const args = process.argv;
+let args = process.argv;
 // console.log(process.argv)
-//const args = ['', '', 'trust','202309']
+args = ['', '', 'trust','202309']
 
 function showsHelp(){
     console.error(`Usage: node ./index.js <type> <start_date> [end_date] \n\n'Type' can be 'cession' or 'trust'.\n End Date is optional.`);
@@ -175,7 +175,7 @@ const stringContainsPattern = (inputString) => {
     return pattern.test(inputString);
 };
 let ttcount = 0
-async function downloadPdf(url, type = 'cession') {
+async function downloadPdf(url, ym, type = 'cession') {
     try {
         console.log('Fetching: ', url);
 
@@ -187,21 +187,23 @@ async function downloadPdf(url, type = 'cession') {
             let b = filters[i]['PDS Client Code'];
             let c = parts[6];
             let d = filters[i]['PDS Product Code'];
-
-            c = c.replace('.pdf', '').replace('-', '').replace(' ', '').replace('_', '')
-            d = d.replace('-', '').replace(' ', '').replace('_', '')
             // console.log(a, b, c, d)
             if (type == 'cession') {
+                c = c.replace('.pdf', '').replace('-', '').replace(' ', '').replace('_', '')
+                d = d.replace('-', '').replace(' ', '').replace('_', '')
                 if (a == b && c == d) {
                     isCorrect = true;
-                                
                     break;
                 }
             } else {
                 if (a == b) {
-                    //if (a == b && c == d) {
-                        isCorrect = true;
-                        
+                    const year = ym.slice(0, 4);
+                    const month = ym.slice(4);
+                    
+                    const str = `${year}-${month}`;
+                    if (c.indexOf(str) !== -1)
+                    // if (c.indexOf(d) !== -1 && c.indexOf(str) !== -1)
+                        isCorrect = true;                        
                         break;
                     }
             }
@@ -288,7 +290,7 @@ async function main() {
                 continue;
             }
 
-            await downloadPdf(m_urls[idx], type);
+            await downloadPdf(m_urls[idx], ym, type);
         }    
     }
 
