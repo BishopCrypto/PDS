@@ -12,8 +12,6 @@ const { PDFDocument } = require('pdf-lib');
 const websiteUrl = 'https://www.pdsadm.com/PAnet/Account/Login';
 
 let args = process.argv;
-// console.log(process.argv)
-args = ['', '', 'trust','202309']
 
 function showsHelp(){
     console.error(`Usage: node ./index.js <type> <start_date> [end_date] \n\n'Type' can be 'cession' or 'trust'.\n End Date is optional.`);
@@ -32,8 +30,6 @@ const masterUser = 'RALPDS',
 let type = args[2];
 if (type !== 'cession' && type!=='trust')
     showsHelp();
-
-console.log(args.length)
 
 const year_month_list = []
 let startDate, endDate;
@@ -59,8 +55,8 @@ if (args.length >= 5) {
         showsHelp(); 
     }
 } else {
-    endDate = new Date();
-    endDate.setMonth(endDate.getMonth() - 1);
+    const [startMonth, startYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
+    endDate = new Date(startYear, startMonth - 1);
 }
 
 for (let date = startDate; date <= endDate; date.setMonth(date.getMonth() + 1)) {
@@ -71,9 +67,7 @@ for (let date = startDate; date <= endDate; date.setMonth(date.getMonth() + 1)) 
     year_month_list.push(dString);
 }
 
-console.log(year_month_list)
-
-const filePath = './filter.csv';
+const filePath = type=='cession' ? './filter_cessions.csv' : './filter_trusts.csv';
 const csv = require('csv-parser');
 
 const results = [];
@@ -84,13 +78,12 @@ fsnp.createReadStream(filePath)
     .on('end', () => {
         // Process the data here
         results.map(record => {
-                if (record['To be uploaded'] == 'YES') {
-                    filters.push(record)
-                }
-            })
-            //console.log(filters);
+            if (record['To be uploaded'] == 'YES') {
+                filters.push(record)
+            }
+        })
     });
-// return;
+
 async function getUserAccessKey() {
     const browser = await puppeteer.launch({
         headless: false,
@@ -174,71 +167,78 @@ const stringContainsPattern = (inputString) => {
 
     return pattern.test(inputString);
 };
-let ttcount = 0
+
+function isValidDateFormat(str) {
+    // Check if the string matches the regular expression
+    if (!/^\d{4}-\d{2}$/.test(str)) {
+      return false;
+    }
+  
+    // Try to parse the string as a date
+    const date = Date.parse(str);
+  
+    // Check if the date is valid
+    return !isNaN(date);
+}
+
+let processedCount = 1
 async function downloadPdf(url, ym, type = 'cession') {
     try {
-        console.log('Fetching: ', url);
 
+        console.log(url)
         const parts = url.split('/');
+        const pdsClientCode = parts[2];
+        const directory = parts[4];
+        const downloadDirectory = parts[5];
+        const productCodeInUrl = parts[6].replace('.pdf', '');
 
         let isCorrect = false;
+        
         for (let i = 0; i < filters.length; i++) {
-            let a = parts[2];
-            let b = filters[i]['PDS Client Code'];
-            let c = parts[6];
-            let d = filters[i]['PDS Product Code'];
-            // console.log(a, b, c, d)
-            if (type == 'cession') {
-                c = c.replace('.pdf', '').replace('-', '').replace(' ', '').replace('_', '')
-                d = d.replace('-', '').replace(' ', '').replace('_', '')
-                if (a == b && c == d) {
+            const filter = filters[i];
+            if (type == 'cession')
+            {
+                const clientCode = filter['PDS Client Code'];
+                const clientName = filter['Client Name'];
+                const productCode1 = filter['PDS Product Code1'];
+                const productCode2 = filter['PDS Product Code2'];
+                const cessionId = filter['Cession ID'];
+
+                if (pdsClientCode == clientCode && (productCodeInUrl.indexOf(productCode1) != -1 || productCodeInUrl.indexOf(productCode2) != -1)) {
                     isCorrect = true;
                     break;
                 }
-            } else {
-                if (a == b) {
+            } else if (type == 'trust') {
+                const clientCode = filter['PDS Client Code'];
+                const clientName = filter['Client Name'];
+                const bank = filter['Bank'];
+                const partsfromUrl = productCodeInUrl.split(' ');
+                const dateYM = partsfromUrl[3];
+                if (!isValidDateFormat(dateYM)) dateYM = partsfromUrl[4];
+
+                if (pdsClientCode == clientCode) {
                     const year = ym.slice(0, 4);
                     const month = ym.slice(4);
-                    
-                    const str = `${year}-${month}`;
-                    if (c.indexOf(str) !== -1)
-                    // if (c.indexOf(d) !== -1 && c.indexOf(str) !== -1)
-                        isCorrect = true;                        
+                    const yearMonthStr = `${year}-${month}`;
+                    if (dateYM == yearMonthStr) {
+                        isCorrect = true;
                         break;
                     }
+                }
             }
-            
         }
 
         if (isCorrect) {
-            ttcount++;
-            console.log(ttcount)
-            let dir = `./downloads/${parts[5]}`;
+            
+            let dir = '';
             if (type == 'cession') {
-                dir = `./downloads/cession/${parts[5]}`
-            } else if (type == 'trust'){
-                let sub_parts = parts[6].split(' ');
-                let sub_dir = '';
-                for (let i = 0; i < sub_parts.length; i++) {
-                    if (stringContainsPattern(sub_parts[i])) {
-                        sub_dir = sub_parts[i]
-                        break
-
-                    }
-                }
-                dir = `./downloads/trust/${parts[5]}/${sub_dir}/`
-            }
-            await fs.mkdir(dir, { recursive: true });
-            let filename = `${parts[2]}_${parts[6]}`;
-            filename = filename.replace('-', '_');
-            filename = filename.replace(' ', '_');
-            filename = filename.replace('.pdf', '');
-
-            const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
-            const buffer = Buffer.from(response.data, 'binary');
-            // await fs.writeFile(`${dir}/${filename}_tmp`, buffer);
-
-            if (type == 'cession') {
+                let filename = `${pdsClientCode}_${productCodeInUrl}`;
+                filename = filename.replace('-', '_');
+                filename = filename.replace(' ', '_');
+                dir = `./downloads/cession/${downloadDirectory}`;
+                await fs.mkdir(dir, { recursive: true });
+                const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
+                const buffer = Buffer.from(response.data, 'binary');
                 const pdfDoc = await PDFDocument.load(buffer);
                 const pageCount = pdfDoc.getPageCount();
                 const pdfDocSingle = await PDFDocument.create();
@@ -246,10 +246,23 @@ async function downloadPdf(url, ym, type = 'cession') {
                 pdfDocSingle.addPage(copiedPage);
                 const pdfBytesSingle = await pdfDocSingle.save();
                 await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
-                // console.log(`${dir}/${filename}_last_page.pdf`);
-            } else {
+            } else if (type == 'trust'){
+                let filename = `${productCodeInUrl}`;
+                filename = filename.replace('-', '_');
+                filename = filename.replace(' ', '_');
+                const partsfromUrl = productCodeInUrl.split(' ');
+                const dateYM = partsfromUrl[3];
+                if (!isValidDateFormat(dateYM)) dateYM = partsfromUrl[4];
+                
+                dir = `./downloads/trust/${downloadDirectory}/${dateYM}/`
+                await fs.mkdir(dir, { recursive: true });
+                const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
+                const buffer = Buffer.from(response.data, 'binary');
                 await fs.writeFile(`${dir}/${filename}.pdf`, buffer);
             }
+            
+            processedCount++;
+            console.log(processedCount)
         }
     } catch (error) {
         return '';
@@ -258,17 +271,13 @@ async function downloadPdf(url, ym, type = 'cession') {
 
 async function main() {
     const uak = await getUserAccessKey();
-    console.log(uak)
 
-    let directories = [
-        'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
-    ];
+    let directories = [];
 
     let skipped_urls = [];
     for (let i = 0; i < year_month_list.length; i++) {
         const ym = year_month_list[i];
-        // console.log(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
-        // console.log(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
+        
         let m_urls;
         if (type == 'cession') {
             m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
