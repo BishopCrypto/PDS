@@ -84,6 +84,14 @@ async function updateIntakeDocument(accessToken, intakeDocument, status) {
 let count = 0;
 // main function
 async function main(downloadFolderPath, uploadFolderPath) {
+    fs.mkdir(uploadFolderPath, { recursive: true }, (err) => {
+        if (err) {
+          console.error('Error creating directory:', err);
+          return;
+        }
+        console.log('Directory created successfully');
+    });
+    
     fs.readdir(downloadFolderPath, (err, files) => {
         if (err) {
             console.error('Error reading folder:', err);
@@ -103,7 +111,7 @@ async function main(downloadFolderPath, uploadFolderPath) {
                 const intakeDocumentLog = await createIntakeDocumentLog(accessToken, 'UPLOADING', 'ralstage', `Uploading file ${originalFileName} to intake`, intakeDocument.fileName);
                 const uploadResponse = await uploadStatement(accessToken, intakeDocument.fileName, sourcePath);
                 const updatedIntakeDocument = await updateIntakeDocument(accessToken, intakeDocument, 'Waiting');
-                console.log(updatedIntakeDocument.fileName);
+                console.log(updatedIntakeDocument);
 
                 fs.rename(sourcePath, destPath, err => {
                     if (err) {
@@ -119,7 +127,9 @@ async function main(downloadFolderPath, uploadFolderPath) {
     });
 }
 
-const downloadFolderPath = 'E:/project/pds/downloads/cession/2023-12 December 2023';
-const uploadFolderPath = 'E:/project/pds/to_upload';
+let downloadFolderPath = './uploader/to_be_uploaded';
+let uploadFolderPath = './uploader/uploaded';
 
-main(downloadFolderPath, uploadFolderPath);
+if (fs.existsSync(downloadFolderPath)) {
+    main(downloadFolderPath, uploadFolderPath);
+}

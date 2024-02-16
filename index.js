@@ -235,7 +235,7 @@ async function downloadPdf(url, ym, type = 'cession') {
                 let filename = `${pdsClientCode}_${productCodeInUrl}`;
                 filename = filename.replace('-', '_');
                 filename = filename.replace(' ', '_');
-                dir = `./downloads/cession/${downloadDirectory}`;
+                dir = `./uploader/to_be_uploaded`;
                 await fs.mkdir(dir, { recursive: true });
                 const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
                 const buffer = Buffer.from(response.data, 'binary');
@@ -245,7 +245,7 @@ async function downloadPdf(url, ym, type = 'cession') {
                 const [copiedPage] = await pdfDocSingle.copyPages(pdfDoc, [pageCount - 1]);
                 pdfDocSingle.addPage(copiedPage);
                 const pdfBytesSingle = await pdfDocSingle.save();
-                await fs.writeFile(`${dir}/${filename}_last_page.pdf`, pdfBytesSingle);
+                await fs.writeFile(`${dir}/cession_${downloadDirectory}_${filename}_last_page.pdf`, pdfBytesSingle);
             } else if (type == 'trust'){
                 let filename = `${productCodeInUrl}`;
                 filename = filename.replace('-', '_');
@@ -254,11 +254,11 @@ async function downloadPdf(url, ym, type = 'cession') {
                 const dateYM = partsfromUrl[3];
                 if (!isValidDateFormat(dateYM)) dateYM = partsfromUrl[4];
                 
-                dir = `./downloads/trust/${downloadDirectory}/${dateYM}/`
+                dir = `./uploader/to_be_uploaded`
                 await fs.mkdir(dir, { recursive: true });
                 const response = await axios.get(`https://www.pdsadm.com/${url}`, { responseType: 'arraybuffer' });
                 const buffer = Buffer.from(response.data, 'binary');
-                await fs.writeFile(`${dir}/${filename}.pdf`, buffer);
+                await fs.writeFile(`${dir}/trust_${dateYM}_${filename}.pdf`, buffer);
             }
             
             processedCount++;
@@ -270,8 +270,8 @@ async function downloadPdf(url, ym, type = 'cession') {
 }
 
 async function main() {
-    const uak = await getUserAccessKey();
-
+    const uak = 66285;
+    
     let directories = [];
 
     let skipped_urls = [];
@@ -288,7 +288,7 @@ async function main() {
             m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
             directories = [
                 'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
-            ];  
+            ];
         }
 
         for (let idx = 0; idx < m_urls.length; idx++) {
@@ -300,7 +300,7 @@ async function main() {
             }
 
             await downloadPdf(m_urls[idx], ym, type);
-        }    
+        }
     }
 
     console.log('Done')
