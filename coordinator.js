@@ -81,8 +81,9 @@ async function updateIntakeDocument(accessToken, intakeDocument, status) {
     return response.data;
 }
 
+
 let count = 0;
-// main function
+
 async function main(downloadFolderPath, uploadFolderPath) {
     fs.mkdir(uploadFolderPath, { recursive: true }, (err) => {
         if (err) {
@@ -91,13 +92,39 @@ async function main(downloadFolderPath, uploadFolderPath) {
         }
         console.log('Directory created successfully');
     });
-    
+
+    const currentDate = new Date();
+    const recency = 365;
+    const oldDate = new Date(currentDate);
+    oldDate.setDate(currentDate.getDate() - recency);
+    console.log("Start Date:", oldDate);
+
     fs.readdir(downloadFolderPath, (err, files) => {
         if (err) {
             console.error('Error reading folder:', err);
             return;
         }
-        files.forEach(async file => {
+
+        // Filter files based on modification date
+        const filteredFiles = files.filter(file => {
+            const filePath = path.join(downloadFolderPath, file);
+            const stats = fs.statSync(filePath);
+            return stats.isFile() && stats.mtime > oldDate;
+        });
+
+        // Get the file stats for each remaining file
+        const fileStats = filteredFiles.map(file => {
+            const filePath = path.join(downloadFolderPath, file);
+            return { file, stats: fs.statSync(filePath) };
+        });
+
+        // Sort the remaining files by modification time (from oldest to newest)
+        fileStats.sort((a, b) => a.stats.mtime - b.stats.mtime);
+
+        // Get the sorted file names
+        const sortedFiles = fileStats.map(fileStat => fileStat.file);
+
+        sortedFiles.forEach(async file => {
             try {
                 count ++;
                 console.log(count);
