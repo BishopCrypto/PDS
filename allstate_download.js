@@ -2,8 +2,8 @@
 // markgenova RAL9725RAL
 // markgenova1 RaL4100
 
-// node allstate.js markgenova1 RaL4100 December 2023
-// node allstate.js markgenova RAL9725RAL December 2023
+// node allstate_download.js markgenova1 RaL4100 December 2023
+// node allstate_download.js markgenova RAL9725RAL December 2023
 
 // you may look at this code and say 'is all this necessary?' 
 // yes the answer is yes its necessary.  The AllState site has a lot of quirks and things to overcome.  
@@ -197,7 +197,7 @@ async function main() {
     const browser = await puppeteer.launch({
         headless: false,
         defaultViewport: null,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
+        args: ['--disable-dev-shm-usage', '--single-process'],
         timeout: 0,
     });
 
@@ -205,86 +205,86 @@ async function main() {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
 
-    // const downloadsFolder = path.resolve('./uploader/to_be_uploaded');
-    // const client = await page.target().createCDPSession();
-    // await client.send('Page.setDownloadBehavior', {
-    //     behavior: 'allow',
-    //     downloadPath: downloadsFolder
-    // });
+    const downloadsFolder = path.resolve('./uploader/to_be_uploaded');
+    const client = await page.target().createCDPSession();
+    await client.send('Page.setDownloadBehavior', {
+        behavior: 'allow',
+        downloadPath: downloadsFolder
+    });
 
-    // try {
-    //     await login(page, id, pw);
+    try {
+        await login(page, id, pw);
 
-    //     await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
-    //     await new Promise(resolve => setTimeout(resolve, 5000));
-    //     console.log("This is download page");
+        await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        console.log("This is download page");
         
-    //     check_4_cookie_button(page);
-    //     await new Promise(resolve => setTimeout(resolve, 5000));
+        check_4_cookie_button(page);
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
-    //     const tableRowsSelector = 'div > div:nth-child(2) > table > tbody > tr';
-    //     const extractedData = await page.$$eval(tableRowsSelector, (rows, monthValueToSelect) => {
-    //         return rows.map(row => {
-    //             const thElement = row.querySelector('th');
-    //             if (!thElement || !thElement.innerText.startsWith('Reinsurance Report |')) {
-    //                 return null;
-    //             }
+        const tableRowsSelector = 'div > div:nth-child(2) > table > tbody > tr';
+        const extractedData = await page.$$eval(tableRowsSelector, (rows, monthValueToSelect) => {
+            return rows.map(row => {
+                const thElement = row.querySelector('th');
+                if (!thElement || !thElement.innerText.startsWith('Reinsurance Report |')) {
+                    return null;
+                }
 
-    //             const reportDetails = thElement.innerText.split('Reinsurance Report | ')[1];
-    //             const lastCommaIndex = reportDetails.lastIndexOf(',');
-    //             if (lastCommaIndex === -1) {
-    //                 return null;
-    //             }
+                const reportDetails = thElement.innerText.split('Reinsurance Report | ')[1];
+                const lastCommaIndex = reportDetails.lastIndexOf(',');
+                if (lastCommaIndex === -1) {
+                    return null;
+                }
 
-    //             const reinsurer = reportDetails.substring(0, lastCommaIndex).trim();
-    //             const monthYear = reportDetails.substring(lastCommaIndex + 1).trim();
+                const reinsurer = reportDetails.substring(0, lastCommaIndex).trim();
+                const monthYear = reportDetails.substring(lastCommaIndex + 1).trim();
 
-    //             const downloadLinkElement = row.querySelector('a.btn-green[href*="download"]');
-    //             const downloadSelector = downloadLinkElement ? `a[href='${downloadLinkElement.getAttribute('href')}']` : '';
+                const downloadLinkElement = row.querySelector('a.btn-green[href*="download"]');
+                const downloadSelector = downloadLinkElement ? `a[href='${downloadLinkElement.getAttribute('href')}']` : '';
 
-    //             const deleteLinkElement = row.querySelector('a.btn-green[href*="delete"]');
-    //             const deleteSelector = deleteLinkElement ? `a[href='${deleteLinkElement.getAttribute('href')}']` : '';
+                const deleteLinkElement = row.querySelector('a.btn-green[href*="delete"]');
+                const deleteSelector = deleteLinkElement ? `a[href='${deleteLinkElement.getAttribute('href')}']` : '';
 
-    //             return { reinsurer, monthYear, downloadSelector, deleteSelector };
-    //         }).filter(item => item && item.downloadSelector && item.monthYear === monthValueToSelect);
-    //     }, monthValueToSelect);
+                return { reinsurer, monthYear, downloadSelector, deleteSelector };
+            }).filter(item => item && item.downloadSelector && item.monthYear === monthValueToSelect);
+        }, monthValueToSelect);
 
-    //     console.log(extractedData);
+        console.log(extractedData);
         
-    //     if (extractedData.length > 0) {
-    //         for (const { reinsurer, monthYear, downloadSelector, deleteSelector } of extractedData) {
-    //             if (skipReinsurers.includes(reinsurer)) {
-    //                 console.log(`Skipping download for: ${reinsurer}`);
-    //                 continue;
-    //             }
-    //             console.log(`Attempting to download report for: ${reinsurer}, ${monthYear}`);
-    //             try {
-    //                 await page.click(downloadSelector);
+        if (extractedData.length > 0) {
+            for (const { reinsurer, monthYear, downloadSelector, deleteSelector } of extractedData) {
+                if (skipReinsurers.includes(reinsurer)) {
+                    console.log(`Skipping download for: ${reinsurer}`);
+                    continue;
+                }
+                console.log(`Attempting to download report for: ${reinsurer}, ${monthYear}`);
+                try {
+                    await page.click(downloadSelector);
 
-    //                 await new Promise(resolve => setTimeout(resolve, 1000));
-    //                 renameRecentDownload(downloadsFolder, reinsurer, monthYear);
-    //                 if (!downloadedReports[reinsurer]) {
-    //                     downloadedReports[reinsurer] = {};
-    //                 }
-    //                 downloadedReports[reinsurer][monthYear] = true;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    renameRecentDownload(downloadsFolder, reinsurer, monthYear);
+                    if (!downloadedReports[reinsurer]) {
+                        downloadedReports[reinsurer] = {};
+                    }
+                    downloadedReports[reinsurer][monthYear] = true;
                     
-    //                 await page.click(deleteSelector);
-    //                 await new Promise(resolve => setTimeout(resolve, 1000));
-    //             } catch (error) {
-    //                 console.error(`Error while downloading report for ${reinsurer}, ${monthYear}:`, error);
-    //             }
-    //         }
-    //     } else {
-    //         console.log('No download links found in the reports table, so moving on to generate some.');
-    //     }
-    //     await page.goto(downloadsUrl, { waitUntil: 'networkidle0', timeout: 0 });
+                    await page.click(deleteSelector);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    console.error(`Error while downloading report for ${reinsurer}, ${monthYear}:`, error);
+                }
+            }
+        } else {
+            console.log('No download links found in the reports table, so moving on to generate some.');
+        }
+        await page.goto(downloadsUrl, { waitUntil: 'networkidle0', timeout: 0 });
 
-    // } catch (error) {
-    //     console.error('An error occurred:', error);
-    // } finally {
-    //     await browser.close();
-    // }
-    // console.log('Done generating all reports for Month Year combo and ID.');
+    } catch (error) {
+        console.error('An error occurred:', error);
+    } finally {
+        await browser.close();
+    }
+    console.log('Done generating all reports for Month Year combo and ID.');
 }
 
 main();
