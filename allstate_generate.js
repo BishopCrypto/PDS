@@ -75,7 +75,6 @@ function getUserInput() {
     console.log("Month Value To Select:", monthValueToSelect);
 
     return { id, pw, monthValueToSelect };
-
 }
 
 
@@ -99,7 +98,7 @@ async function login(page, id, pw) {
     await new Promise(resolve => setTimeout(resolve, 200));
     console.log('Done login');
 
-    console.log('Waiting 2 secs for download page...');
+    console.log('Waiting for download page...');
     await new Promise(resolve => setTimeout(resolve, 2000));
 }
 
@@ -121,81 +120,12 @@ async function check_4_cookie_button(page) {
 }
 
 
-async function downloadFile() {
-
-    downloadLink = 'https://allstatedealerservices.com/reports/download/243440?reportName=Reinsurance%20Report';
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Then download the file with Axios...
-    const response = await axios({
-        url: downloadLink,
-        method: 'GET',
-        responseType: 'stream',
-    });
-
-    const writer = fs.createWriteStream('./file.pdf');
-
-    response.data.pipe(writer);
-
-    writer.on('finish', () => {
-        console.log('Download finished');
-    });
-
-    writer.on('error', (error) => {
-        console.error('Error occurred:', error);
-    });
-}
-
-
-let downloadedReports = {};
-
-function renameRecentDownload(directoryPath, reinsurer, monthYear) {
-
-    console.log(directoryPath);
-    const files = fs.readdirSync(directoryPath);
-
-    if (files.length > 0) {
-        const newestFile = files.reduce((a, b) => {
-            const fullPathA = path.join(directoryPath, a);
-            const fullPathB = path.join(directoryPath, b);
-            const statA = fs.statSync(fullPathA);
-            const statB = fs.statSync(fullPathB);
-            return statA.mtime.getTime() > statB.mtime.getTime() ? a : b;
-        });
-
-        console.log('Newest file:', newestFile);
-        // You can now use `newestFile` to access the file or its properties.
-        if (newestFile) {
-            const oldFilePath = path.join(directoryPath, newestFile);
-            const newFileName = `${monthYear} - ${reinsurer}.pdf`;
-            const newFilePath = path.join(directoryPath, newFileName);
-
-            // Check if the file with the new name already exists
-            if (fs.existsSync(newFilePath)) {
-                // If file exists, delete it
-                fs.unlinkSync(newFilePath);
-                console.log(`Deleted existing file: ${newFileName}`);
-            }
-            // Proceed to rename the file
-            fs.renameSync(oldFilePath, newFilePath);
-            console.log(`Renamed ${newestFile} to ${newFileName}`);
-
-        } else {
-            console.log('No files found in the directory which is weird because we are here.');
-        }
-    } else {
-        console.log('No files found in the directory.');
-    }
-
-}
-
-
 async function main() {
     const userInput = getUserInput();
     const { id, pw, monthValueToSelect } = userInput;
 
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
         timeout: 0,
@@ -216,14 +146,15 @@ async function main() {
         await login(page, id, pw);
 
         await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        console.log("This is download page");
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        console.log("This is download page.");
         
         check_4_cookie_button(page);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 10000));
 
         await page.goto(reportsUrl, { waitUntil: 'networkidle0', timeout: 0 });
-        await page.waitForSelector('#inputReinsurer', { visible: true, timeout: 0 });
+        await page.waitForSelector('#inputReinsurer', { timeout: 0 });
+        console.log("This is report page.");
         
         const buttonSelector = '#reinsuranceRegisterReportSection > form > div > div > div.col-12.mt-3.text-right > button';
         const dropdownSelector = '#inputReinsurer';
@@ -255,7 +186,7 @@ async function main() {
             const [monthDropdown] = await page.$x(monthDropdownXPath);
             await monthDropdown.select(monthValueToSelect); // this is the month.
 
-            console.log('Clicking generate report button');
+            console.log('Clicking generate report button...');
             await page.click(buttonSelector);
 
             await page.waitForFunction(
@@ -270,10 +201,10 @@ async function main() {
             let reportsCompleted = ++reportsProcessed;
             let remainingReports = reinsurerOptions.length - reportsCompleted;
             let estimatedTimeRemaining = (elapsedTime / reportsCompleted) * remainingReports;
-            console.log(`Elapsed time: ${Math.round(elapsedTime / 60)} minutes`);
-            console.log(`Estimated time remaining: ${Math.round(estimatedTimeRemaining / 60)} minutes for ${remainingReports} remaining reports`);
+            console.log(`Elapsed time: ${Math.round(elapsedTime / 60)} minutes.`);
+            console.log(`Estimated time remaining: ${Math.round(estimatedTimeRemaining / 60)} minutes for ${remainingReports} remaining reports.`);
 
-            console.log('Reloading page because of eventual time-out');
+            console.log('Reloading page because of eventual time-out...');
             await page.reload({ waitUntil: 'networkidle0', timeout: 100000 });
             await page.waitForSelector(dropdownSelector, { visible: true, timeout: 0 });
         }

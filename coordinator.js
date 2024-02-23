@@ -90,7 +90,7 @@ async function main(downloadFolderPath, uploadFolderPath) {
           console.error('Error creating directory:', err);
           return;
         }
-        console.log('Directory created successfully');
+        console.log('Directory created successfully.');
     });
 
     const currentDate = new Date();

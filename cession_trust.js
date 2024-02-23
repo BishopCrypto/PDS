@@ -86,7 +86,7 @@ fsnp.createReadStream(filePath)
 
 async function getUserAccessKey() {
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         defaultViewport: null,
         args: [
             '--no-sandbox',

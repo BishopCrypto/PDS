@@ -2,8 +2,8 @@
 // markgenova RAL9725RAL
 // markgenova1 RaL4100
 
-// node allstate_download.js markgenova1 RaL4100 December 2023
 // node allstate_download.js markgenova RAL9725RAL December 2023
+// node allstate_download.js markgenova1 RaL4100 December 2023
 
 // you may look at this code and say 'is all this necessary?' 
 // yes the answer is yes its necessary.  The AllState site has a lot of quirks and things to overcome.  
@@ -75,7 +75,6 @@ function getUserInput() {
     console.log("Month Value To Select:", monthValueToSelect);
 
     return { id, pw, monthValueToSelect };
-
 }
 
 
@@ -99,7 +98,7 @@ async function login(page, id, pw) {
     await new Promise(resolve => setTimeout(resolve, 200));
     console.log('Done login');
 
-    console.log('Waiting 2 secs for download page...');
+    console.log('Waiting for download page...');
     await new Promise(resolve => setTimeout(resolve, 2000));
 }
 
@@ -118,32 +117,6 @@ async function check_4_cookie_button(page) {
     } else {
         console.log('Cookies button does not exist, skipping...');
     }
-}
-
-
-async function downloadFile() {
-
-    downloadLink = 'https://allstatedealerservices.com/reports/download/243440?reportName=Reinsurance%20Report';
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Then download the file with Axios...
-    const response = await axios({
-        url: downloadLink,
-        method: 'GET',
-        responseType: 'stream',
-    });
-
-    const writer = fs.createWriteStream('./file.pdf');
-
-    response.data.pipe(writer);
-
-    writer.on('finish', () => {
-        console.log('Download finished');
-    });
-
-    writer.on('error', (error) => {
-        console.error('Error occurred:', error);
-    });
 }
 
 
@@ -195,7 +168,7 @@ async function main() {
     const { id, pw, monthValueToSelect } = userInput;
 
     const browser = await puppeteer.launch({
-        headless: false,
+        headless: true,
         defaultViewport: null,
         args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
         timeout: 0,
@@ -216,11 +189,11 @@ async function main() {
         await login(page, id, pw);
 
         await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        console.log("This is download page");
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        console.log("This is download page.");
         
         check_4_cookie_button(page);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 10000));
 
         const tableRowsSelector = 'div > div:nth-child(2) > table > tbody > tr';
         const extractedData = await page.$$eval(tableRowsSelector, (rows, monthValueToSelect) => {
