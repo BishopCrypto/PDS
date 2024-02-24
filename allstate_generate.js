@@ -2,8 +2,8 @@
 // markgenova RAL9725RAL
 // markgenova1 RaL4100
 
-// node allstate.js markgenova1 RaL4100 December 2023
-// node allstate.js markgenova RAL9725RAL December 2023
+// node allstate_generate.js markgenova1 RaL4100 December 2023
+// node allstate_generate.js markgenova RAL9725RAL December 2023
 
 // you may look at this code and say 'is all this necessary?' 
 // yes the answer is yes its necessary.  The AllState site has a lot of quirks and things to overcome.  
