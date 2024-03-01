@@ -1,3 +1,6 @@
+// node cession_trust.js trust 202401
+// node cession_trust.js cession 202312 202401
+
 const fs = require('fs/promises');
 const fsnp = require('fs');
 const puppeteer = require('puppeteer');
@@ -84,6 +87,7 @@ fsnp.createReadStream(filePath)
         })
     });
 
+
 async function getUserAccessKey() {
     const browser = await puppeteer.launch({
         headless: true,
@@ -152,6 +156,7 @@ function findURLs(data) {
     return URLs;
 }
 
+
 async function fetchData(url) {
     try {
         const response = await axios.get(url);
@@ -168,6 +173,7 @@ const stringContainsPattern = (inputString) => {
     return pattern.test(inputString);
 };
 
+
 function isValidDateFormat(str) {
     // Check if the string matches the regular expression
     if (!/^\d{4}-\d{2}$/.test(str)) {
@@ -181,11 +187,11 @@ function isValidDateFormat(str) {
     return !isNaN(date);
 }
 
-let processedCount = 1
+let total_count = 0;
+
 async function downloadPdf(url, ym, type = 'cession') {
     try {
-
-        console.log(url)
+        console.log(url);
         const parts = url.split('/');
         const pdsClientCode = parts[2];
         const directory = parts[4];
@@ -229,8 +235,10 @@ async function downloadPdf(url, ym, type = 'cession') {
         }
 
         if (isCorrect) {
-            
             let dir = '';
+            total_count ++;
+            console.log(total_count);
+
             if (type == 'cession') {
                 let filename = `${pdsClientCode}_${productCodeInUrl}`;
                 filename = filename.replace('-', '_');
@@ -260,21 +268,19 @@ async function downloadPdf(url, ym, type = 'cession') {
                 const buffer = Buffer.from(response.data, 'binary');
                 await fs.writeFile(`${dir}/trust_${dateYM}_${filename}.pdf`, buffer);
             }
-            
-            processedCount++;
-            console.log(processedCount)
         }
     } catch (error) {
         return '';
     }
 }
 
+
 async function main() {
     const uak = 66285;
     
     let directories = [];
-
     let skipped_urls = [];
+
     for (let i = 0; i < year_month_list.length; i++) {
         const ym = year_month_list[i];
         
@@ -290,7 +296,7 @@ async function main() {
                 'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
             ];
         }
-
+        
         for (let idx = 0; idx < m_urls.length; idx++) {
             const parts = m_urls[idx].split('/');
 
@@ -298,16 +304,28 @@ async function main() {
                 skipped_urls = [...skipped_urls, m_urls[idx]];
                 continue;
             }
-
+            
             await downloadPdf(m_urls[idx], ym, type);
         }
     }
+    console.log('\nDownload finished!');
 
-    console.log('Done')
+    console.log('Writing skipped urls...');
     const content = skipped_urls.join('\n');
-    fs.writeFile('SkippedUrls.txt', content, error => {
-        console.log(error)
+    console.log(content);
+    await fs.writeFile('skipped_urls.txt', content, error => {
+        console.log(error);
     });
+
+    const currentDate = new Date();
+    console.log("total count", total_count);
+    let logtxt = `${type}, ${currentDate.toISOString().split('T')[0]}, ${total_count} downloads\n`;
+    await fs.appendFile('log.txt', logtxt, function (err) {
+        if (err) throw err;
+    });
+
+    console.log('Done');
+    process.exit(0);
 }
 
 main();

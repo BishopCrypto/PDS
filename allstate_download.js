@@ -140,7 +140,7 @@ function renameRecentDownload(directoryPath, reinsurer, monthYear) {
         // You can now use `newestFile` to access the file or its properties.
         if (newestFile) {
             const oldFilePath = path.join(directoryPath, newestFile);
-            const newFileName = `${monthYear} - ${reinsurer}.pdf`;
+            const newFileName = `allstate_${monthYear} - ${reinsurer}.pdf`;
             const newFilePath = path.join(directoryPath, newFileName);
 
             // Check if the file with the new name already exists
@@ -159,7 +159,6 @@ function renameRecentDownload(directoryPath, reinsurer, monthYear) {
     } else {
         console.log('No files found in the directory.');
     }
-
 }
 
 
@@ -241,11 +240,12 @@ async function main() {
                     }
                     downloadedReports[reinsurer][monthYear] = true;
                     
-                    await page.click(deleteSelector);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // await page.click(deleteSelector);
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
                 } catch (error) {
                     console.error(`Error while downloading report for ${reinsurer}, ${monthYear}:`, error);
                 }
+                break;
             }
         } else {
             console.log('No download links found in the reports table, so moving on to generate some.');
