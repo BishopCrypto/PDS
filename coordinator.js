@@ -5,9 +5,12 @@ const fs = require('fs');
 const FormData = require('form-data');
 const path = require('path');
 
+const endpoint = 'https://rallcprod.azurewebsites.net';
+const tofilePath = 'ralprod';
+
 // Step 1: Get OAuth token
 async function getOAuthToken() {
-    const url = 'https://rallcstage.azurewebsites.net/oauth/token';
+    const url = `${endpoint}/oauth/token`;
     const data = new URLSearchParams();
     data.append('grant_type', 'client_credentials');
     data.append('client_id', 'a934a88b4bed4a12g7d888f5c43dcb68');
@@ -22,7 +25,7 @@ async function getOAuthToken() {
 
 // Step 2: Creating the `intakeDocument` record for an uploaded statement
 async function createIntakeDocument(accessToken, originalFileName, originationSource = 'webdrop') {
-    const url = 'https://rallcstage.azurewebsites.net/api/intakeDocument';
+    const url = `${endpoint}/api/intakeDocument`;
     const data = {
         originalFileName: originalFileName,
         OriginationSource: originationSource
@@ -38,7 +41,7 @@ async function createIntakeDocument(accessToken, originalFileName, originationSo
 
 // Step 3: Creating the `intakeDocumentLog` record for an uploaded statement
 async function createIntakeDocumentLog(accessToken, status, filepath, description, filename) {
-    const url = 'https://rallcstage.azurewebsites.net/api/DocumentIntakeLogs';
+    const url = `${endpoint}/api/DocumentIntakeLogs`;
     const data = {
         status: status,
         type: 'INTAKE',
@@ -57,7 +60,7 @@ async function createIntakeDocumentLog(accessToken, status, filepath, descriptio
 
 // Step 4: Uploading the statement
 async function uploadStatement(accessToken, filename, file) {
-    const url = `https://rallcstage.azurewebsites.net/api/files/uploadStatement/?name=${filename}`;
+    const url = `${endpoint}/api/files/uploadStatement/?name=${filename}`;
     const data = new FormData();
     data.append('file', fs.createReadStream(file), 'filename.ext');
     const response = await axios.post(url, data, {
@@ -72,7 +75,7 @@ async function uploadStatement(accessToken, filename, file) {
 // Step 5: Update the `intakeDocument` record with a status of "Waiting"
 async function updateIntakeDocument(accessToken, intakeDocument, status, filePath) {
     const intakeDocumentId = intakeDocument.intakeDocument_ID;
-    const url = `https://rallcstage.azurewebsites.net/api/intakeDocument/${intakeDocumentId}`;
+    const url = `${endpoint}/api/intakeDocument/${intakeDocumentId}`;
     intakeDocument.status = status;
     intakeDocument.filePath = filePath;
     const response = await axios.put(url, intakeDocument, {
@@ -130,7 +133,7 @@ async function main(downloadFolderPath, uploadFolderPath) {
                 const accessToken = await getOAuthToken();
                 const originalFileName = file;
                 const originationSource = 'webdrop';
-                const filePath = 'ralprod';
+                const filePath = tofilePath;
                 const intakeDocument = await createIntakeDocument(accessToken, originalFileName, originationSource);
                 const intakeDocumentLog = await createIntakeDocumentLog(accessToken, 'UPLOADING', filePath, `Uploading file ${originalFileName} to intake`, intakeDocument.fileName);
                 const uploadResponse = await uploadStatement(accessToken, intakeDocument.fileName, sourcePath);
