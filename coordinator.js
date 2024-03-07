@@ -1,12 +1,36 @@
-// node coordinator.js
-
 const axios = require('axios');
 const fs = require('fs');
 const FormData = require('form-data');
 const path = require('path');
+const util = require('util');
 
-const endpoint = 'https://rallcprod.azurewebsites.net';
-const tofilePath = 'ralprod';
+const send_team = require('./send_team');
+
+let args = process.argv;
+
+function showsHelp(){
+    console.error('===================== Usage =====================');
+    console.error('Example: node coordinator.js trust prod');
+    console.error('Example: node coordinator.js cession stage');
+    console.error('Example: node coordinator.js allstate prod');
+    process.exit(1);
+}
+
+if (args.length != 4) {
+    showsHelp();
+}
+
+let type = args[2];
+if (type !== 'trust' && type !== 'cession' && type !== 'allstate') {
+    showsHelp();
+}
+
+if (args[3] !== 'stage' && args[3] !== 'prod') {
+    showsHelp();
+}
+
+const endpoint = `https://rallc${args[3]}.azurewebsites.net`;
+const tofilePath = `ral${args[3]}`;
 
 // Step 1: Get OAuth token
 async function getOAuthToken() {
@@ -88,43 +112,27 @@ async function updateIntakeDocument(accessToken, intakeDocument, status, filePat
 }
 
 
-let count = 0;
+async function upload_to_api() {
+    const downloadFolderPath = './uploader/to_be_uploaded';
+    const uploadFolderPath = './uploader/uploaded';
 
-async function main(downloadFolderPath, uploadFolderPath) {
-    const currentDate = new Date();
-    const recency = 365;
-    const oldDate = new Date(currentDate);
-    oldDate.setDate(currentDate.getDate() - recency);
-    console.log("Start Date:", oldDate);
-    
-    fs.readdir(downloadFolderPath, (err, files) => {
-        if (err) {
-            console.error('Error reading folder:', err);
-            return;
-        }
+    const readdir = util.promisify(fs.readdir);
+    try {
+        const files = await readdir(downloadFolderPath);
 
-        // Filter files based on modification date
-        const filteredFiles = files.filter(file => {
-            const filePath = path.join(downloadFolderPath, file);
-            const stats = fs.statSync(filePath);
-            return stats.isFile() && stats.mtime > oldDate;
+        const fileStats = files.map(file => {
+            return { file, stats: fs.statSync(path.join(downloadFolderPath, file)) };
         });
 
-        // Get the file stats for each remaining file
-        const fileStats = filteredFiles.map(file => {
-            const filePath = path.join(downloadFolderPath, file);
-            return { file, stats: fs.statSync(filePath) };
-        });
+        const sortedFiles = fileStats
+            .filter(fs => fs.stats.isFile())
+            .sort((a, b) => a.stats.mtime - b.stats.mtime)
+            .map(fs => fs.file);
 
-        // Sort the remaining files by modification time (from oldest to newest)
-        fileStats.sort((a, b) => a.stats.mtime - b.stats.mtime);
-
-        // Get the sorted file names
-        const sortedFiles = fileStats.map(fileStat => fileStat.file);
-
-        sortedFiles.forEach(async (file) => {
-            try {
-                count++;
+        let count = 0;
+        for (const file of sortedFiles) {
+            if (file.startsWith(type)) {
+                count ++;
                 console.log(count);
                 console.log(file);
 
@@ -135,39 +143,32 @@ async function main(downloadFolderPath, uploadFolderPath) {
                 const originationSource = 'webdrop';
                 const filePath = tofilePath;
                 const intakeDocument = await createIntakeDocument(accessToken, originalFileName, originationSource);
-                const intakeDocumentLog = await createIntakeDocumentLog(accessToken, 'UPLOADING', filePath, `Uploading file ${originalFileName} to intake`, intakeDocument.fileName);
+                const documentLog = await createIntakeDocumentLog(accessToken, 'UPLOADING', filePath, `Uploading file ${originalFileName} to intake`, intakeDocument.fileName);
                 const uploadResponse = await uploadStatement(accessToken, intakeDocument.fileName, sourcePath);
-                const updatedIntakeDocument = await updateIntakeDocument(accessToken, intakeDocument, 'Waiting', filePath);
-                console.log(updatedIntakeDocument);
-                fs.rename(sourcePath, destPath, err => {
-                    if (err) {
-                        console.error(`Error moving file ${file}:`, err);
-                    } else {
-                        console.log(`File ${file} moved successfully.`);
-                    }
-                });
-            } catch (error) {
-                console.error('Error:', error.response);
+                const updateResponse = await updateIntakeDocument(accessToken, intakeDocument, 'Waiting', filePath);
+                console.log(updateResponse);
+
+                // Move the file
+                fs.renameSync(sourcePath, destPath);
+                console.log(`File ${file} moved successfully.`);
             }
-        });
-        let logtxt = `api upload, ${currentDate.toISOString().split('T')[0]}, ${count} uploads\n`;
-        fs.appendFile('log.txt', logtxt, function (err) {
-            if (err) throw err;
-        });
-    });
-}
-
-let downloadFolderPath = './uploader/to_be_uploaded';
-let uploadFolderPath = './uploader/uploaded';
-
-if (!fs.existsSync(uploadFolderPath)) {
-    fs.mkdir(uploadFolderPath, { recursive: true }, (err) => {
-        if (err) {
-            console.error('Error creating directory:', err);
-            return;
         }
-        console.log('Directory created successfully.');
-    });
+        
+        console.log(`\nTotal count: ${count}`);
+
+        // Prepare message
+        type = (type === 'trust' || type === 'cession') ? `pds ${type}` : type;
+        const currentDate = new Date();
+        const logtxt = `${currentDate.toISOString().split('T')[0]}, ${count} ${type}, api upload\n`;
+        console.log(logtxt);
+        fs.appendFileSync('log.txt', logtxt);
+        
+        send_team.sendMessageToTeamChannel(logtxt);
+
+    } catch (error) {
+        console.error('Error: ', error);
+    }
 }
 
-main(downloadFolderPath, uploadFolderPath);
+
+upload_to_api();

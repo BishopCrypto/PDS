@@ -7,16 +7,10 @@ const channelId = '19:vf-Q02UrJVbNbwBGJYLPXs-Op1fiwWre65GxSVcYOo01@thread.tacv2'
 const client_id = '1cec76bf-93b8-497b-a53c-70c21c2176a6';
 const client_secret = '2XF8Q~SuxClUSnT6.L5YH.gClVrRFa.iTKP5Nb-U';
 
-let msg = {
-    "body": {
-        "content": "Here is log"
-    }
-};
 
 // Step 1: Get OAuth token
 async function getOAuthToken() {
     const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
-    console.log(url);
     const data = new URLSearchParams();
     data.append('client_id', client_id);
     data.append('client_secret', client_secret);
@@ -30,8 +24,34 @@ async function getOAuthToken() {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     });
-    
-    console.log(response.data.access_token);
+    return response.data.access_token;
 }
 
-getOAuthToken();
+// Step 2: Sending Message
+async function sendMessageToTeamChannel(message) {
+    const accessToken = await getOAuthToken();
+    const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages`;
+    const data = {
+        "body": {
+            "content": message
+        }
+    };
+
+    await axios.post(url, data, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then((response) => {
+        console.log('Successfully sent log to Team Channel.');
+    })
+    .catch((err) => {
+        console.log('Failed to send log to Team Channel.');
+    });
+}
+
+
+module.exports = {
+    sendMessageToTeamChannel: sendMessageToTeamChannel
+};

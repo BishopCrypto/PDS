@@ -3,6 +3,7 @@
 // markgenova1 RaL4100
 
 // node allstate_generate.js markgenova RAL9725RAL December 2023
+// node allstate_generate.js markgenova1 RaL4100 current 2
 // node allstate_generate.js markgenova1 RaL4100 December 2023
 
 // you may look at this code and say 'is all this necessary?' 
@@ -12,6 +13,15 @@
 // a 'real time' operation.
 // And the reports page times out after 15 minutes even if you have been generating reports the whole time.  A page refresh is needed
 // because it was the fastest way to eliminate the problem.  
+
+
+function showsHelp(){
+    console.error('===================== Usage =====================');
+    console.error('Example: node allstate_generate.js markgenova RAL9725RAL January 2024');
+    console.error('Example: node allstate_generate.js markgenova RAL9725RAL current 2');
+    console.error('Example: node allstate_generate.js markgenova1 RaL4100 December 2023');
+    process.exit(1);
+}
 
 // Define a list of reinsurer names to skip
 const skipReinsurers = [
@@ -29,9 +39,6 @@ const skipReinsurers = [
 ];
 
 
-console.log("Run this code once for each id and password");
-
-
 const puppeteer = require('puppeteer');
 const readline = require('readline');
 
@@ -42,6 +49,8 @@ const fs = require('fs');
 const csv = require('csv-parser');
 const path = require('path');
 const { table } = require('console');
+
+const send_team = require('./send_team');
 
 // Global variables
 const masterUser = "markgenova";
@@ -54,18 +63,26 @@ const downloadsUrl = 'https://allstatedealerservices.com/reports/downloads';
 
 // Functions
 function getUserInput() {
-    // Get command-line arguments instead
-    const args = process.argv.slice(2);
-
-    // Check if all required arguments are provided
-    if (args.length !== 4) {
-        console.error("Usage: node your_program.js <id> <pw> <Month (ie: March)> <year>");
-        process.exit(1); // Exit the program with an error code
+    let args = process.argv;
+    // Check if all required arguments are provided    
+    if (args.length != 6) {
+        showsHelp();
     }
+    
+    // Get command-line arguments instead
+    args = args.slice(2);
 
-    // Extract command-line arguments
-    const [id, pw, month, year] = args;
+    let [id, pw, month, year] = args;
 
+    if (args[2] === 'current') {
+        let months = args[3];
+        const monthsAgo = new Date();
+        monthsAgo.setMonth(monthsAgo.getMonth() - months);
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        month = monthNames[monthsAgo.getMonth()];
+        year = monthsAgo.getFullYear();
+    }
+    
     // Format month and year as monthValueToSelect
     const monthValueToSelect = `${month} ${year}`;
 
@@ -114,13 +131,14 @@ async function check_4_cookie_button(page) {
             cookiesButton.click(),
         ]);
         console.log('Clicked cookies button. Waiting for calm...');
-    } else {
+    }
+    else {
         console.log('Cookies button does not exist, skipping...');
     }
 }
 
 
-async function main() {
+async function allstate_generate() {
     const userInput = getUserInput();
     const { id, pw, monthValueToSelect } = userInput;
 
@@ -142,6 +160,7 @@ async function main() {
         downloadPath: downloadsFolder
     });
 
+    let total_count = 0;
     try {
         await login(page, id, pw);
 
@@ -172,13 +191,14 @@ async function main() {
 
         for (const [index, option] of reinsurerOptions.entries()) {
             if (index === 0) continue; // Skip the first entry, it says 'Choose...'
+            if (index < 66) continue; // Skip the first entry, it says 'Choose...'
 
             if (skipReinsurers.includes(option.label)) {
                 console.log(`Skipping generation of report for: ${option.label}`);
                 continue;
             }
 
-            console.log(`Generating ${index + 1}/${reinsurerOptions.length}: ${option.label} (${option.key})`);
+            console.log(`\nGenerating ${index + 1}/${reinsurerOptions.length}: ${option.label} (${option.key})`);
 
             await page.select(dropdownSelector, option.key); // this is the reinsurer
 
@@ -194,6 +214,7 @@ async function main() {
                 { timeout: 600000 },
                 "Reinsurance report submitted successfully!"
             );
+            total_count ++;
             console.log(`Report submitted for ${option.label}.`);
             await new Promise(resolve => setTimeout(resolve, 10000));
 
@@ -213,22 +234,17 @@ async function main() {
     } finally {
         await browser.close();
     }
-    console.log('Done generating all reports for Month Year combo and ID.');
+    console.log('\nDone generating all reports for Month Year combo and ID.');
+
+    console.log('\nTotal count', total_count);
+    
+    const currentDate = new Date();
+    let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} allstate, generate\n`;
+    console.log(logtxt);
+    fs.appendFileSync('log.txt', logtxt);
+
+    send_team.sendMessageToTeamChannel(logtxt);
 }
 
-main();
 
-/*
-<tr>
-                            <th scope="row">Reinsurance Report | MOBERLY REINSURANCE, LTD.,November 2023</th>
-                            <td>12/24/2023</td>
-                            <td>
-                                <a class="btn-green" onclick="sendEvent('Report Downloads Body Links', 'Click', 'Download')" href="/reports/download/240096?reportName=Reinsurance%20Report">
-                                    <span>Download</span>
-                                </a>
-                                <a class="btn-green" onclick="sendEvent('Report Downloads Body Links', 'Click', 'Delete')" href="/reports/delete?id=240096">
-                                    <span>Delete</span>
-                                </a>
-                            </td>
-                        </tr>
-*/
+allstate_generate();

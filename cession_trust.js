@@ -1,6 +1,3 @@
-// node cession_trust.js trust 202401
-// node cession_trust.js cession 202312 202401
-
 const fs = require('fs/promises');
 const fsnp = require('fs');
 const puppeteer = require('puppeteer');
@@ -12,66 +9,94 @@ const rl = readline.createInterface({
     output: process.stdout
 });
 const { PDFDocument } = require('pdf-lib');
+
+const send_team = require('./send_team');
+
 const websiteUrl = 'https://www.pdsadm.com/PAnet/Account/Login';
 
 let args = process.argv;
 
 function showsHelp(){
-    console.error(`Usage: node ./index.js <type> <start_date> [end_date] \n\n'Type' can be 'cession' or 'trust'.\n End Date is optional.`);
-    console.error('Example: node ./index.js trust 202309 202312');
-    console.error('Example: node ./index.js cession 202309');
+    console.error('===================== Usage =====================');
+    console.error('Example: node cession_trust.js trust 202309 202312');
+    console.error('Example: node cession_trust.js cession 202309');
+    console.error('Example: node cession_trust.js cession current 2');
     process.exit(1);
 }
 
-if (args.length == 0) {
+if (args.length < 4) {
+    showsHelp();
+}
+
+let type = args[2];
+if (type !== 'trust' && type !== 'cession') {
     showsHelp();
 }
 
 const masterUser = 'RALPDS',
     masterPw = 'reinsassoc';
 
-let type = args[2];
-if (type !== 'cession' && type!=='trust')
-    showsHelp();
-
-const year_month_list = []
-let startDate, endDate;
-
 function isValidDate(dateString) {
     const timestamp = Date.parse(dateString);
     return !isNaN(timestamp);
 }
 
-if (args.length >= 4) {
-    if (isValidDate(args[3].substring(4))){
-        const [startMonth, startYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
-        startDate = new Date(startYear, startMonth - 1);
-    } else {
+let startDate, endDate;
+
+if (args.length == 4) {
+    if (isValidDate(args[3])) {
+        startDate = args[3];
+        endDate = startDate;
+    }
+    else {
         showsHelp();
     }
 }
-if (args.length >= 5) {
-    if (isValidDate(args[4].substring(4))){
-        const [endMonth, endYear] = [Number(args[4].substring(4)), Number(args[4].substring(0, 4))];
-        endDate = new Date(endYear, endMonth - 1);
-    } else {
-        showsHelp(); 
+
+if (args.length == 5) {
+    if (args[3] === 'current') {
+        let months = args[4];
+        const monthsAgo = new Date();
+        monthsAgo.setMonth(monthsAgo.getMonth() - months);
+        startDate = `${monthsAgo.getFullYear()}${String(monthsAgo.getMonth() + 1).padStart(2, '0')}`;
+        endDate = startDate;
     }
-} else {
-    const [startMonth, startYear] = [Number(args[3].substring(4)), Number(args[3].substring(0, 4))];
-    endDate = new Date(startYear, startMonth - 1);
+    else {
+        if (isValidDate(args[3])) {
+            startDate = args[3];
+        }
+        else {
+            showsHelp();
+        }
+        if (isValidDate(args[4])) {
+            endDate = args[4];
+        }
+        else {
+            showsHelp();
+        }
+    }
 }
 
-for (let date = startDate; date <= endDate; date.setMonth(date.getMonth() + 1)) {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const dString = `${year}${month}`;
-    year_month_list.push(dString);
+
+function generateMonths(yearMonthStart, yearMonthEnd) {
+    let start = new Date(yearMonthStart.slice(0, 4), yearMonthStart.slice(4) - 1, 1); // -1 because JavaScript month index starts from 0 
+    let end = new Date(yearMonthEnd.slice(0, 4), yearMonthEnd.slice(4), 1); // Add 1 to the month to include the end month for comparison
+    let dateArray = [];
+
+    for (let dt = start; dt < end; dt.setMonth(dt.getMonth() + 1)) {
+        let month = String(dt.getMonth() + 1).padStart(2, "0"); // +1 to get the normal human-readable month number, padStart to make sure it is always two digits
+        dateArray.push(dt.getFullYear() + month);
+    }
+
+    return dateArray;
 }
+
+const year_month_list = generateMonths(startDate, endDate);
 
 const filePath = type=='cession' ? './filter_cessions.csv' : './filter_trusts.csv';
 const csv = require('csv-parser');
+const { start } = require('repl');
+const { response } = require('express');
 
 const results = [];
 const filters = []
@@ -109,7 +134,6 @@ async function getUserAccessKey() {
 
     console.log('Going to website URL...');
     await page.goto(websiteUrl, { waitUntil: 'load', timeout: 0 });
-    // await page.waitForTimeout(2000); // Wait for 2 seconds
 
     console.log('Typing username...');
     await page.type('#UserName', masterUser);
@@ -167,11 +191,6 @@ async function fetchData(url) {
 
     return [];
 }
-const stringContainsPattern = (inputString) => {
-    const pattern = /20\d{2}_\d{2}/; // Regular expression pattern
-
-    return pattern.test(inputString);
-};
 
 
 function isValidDateFormat(str) {
@@ -186,6 +205,7 @@ function isValidDateFormat(str) {
     // Check if the date is valid
     return !isNaN(date);
 }
+
 
 let total_count = 0;
 
@@ -202,8 +222,7 @@ async function downloadPdf(url, ym, type = 'cession') {
         
         for (let i = 0; i < filters.length; i++) {
             const filter = filters[i];
-            if (type == 'cession')
-            {
+            if (type == 'cession') {
                 const clientCode = filter['PDS Client Code'];
                 const clientName = filter['Client Name'];
                 const productCode1 = filter['PDS Product Code1'];
@@ -214,7 +233,8 @@ async function downloadPdf(url, ym, type = 'cession') {
                     isCorrect = true;
                     break;
                 }
-            } else if (type == 'trust') {
+            }
+            else if (type == 'trust') {
                 const clientCode = filter['PDS Client Code'];
                 const clientName = filter['Client Name'];
                 const bank = filter['Bank'];
@@ -254,7 +274,8 @@ async function downloadPdf(url, ym, type = 'cession') {
                 pdfDocSingle.addPage(copiedPage);
                 const pdfBytesSingle = await pdfDocSingle.save();
                 await fs.writeFile(`${dir}/cession_${downloadDirectory}_${filename}_last_page.pdf`, pdfBytesSingle);
-            } else if (type == 'trust'){
+            }
+            else if (type == 'trust') {
                 let filename = `${productCodeInUrl}`;
                 filename = filename.replace('-', '_');
                 filename = filename.replace(' ', '_');
@@ -275,11 +296,13 @@ async function downloadPdf(url, ym, type = 'cession') {
 }
 
 
-async function main() {
+async function cession_trust_download() {
     const uak = 66285;
     
     let directories = [];
     let skipped_urls = [];
+
+    console.log(year_month_list);
 
     for (let i = 0; i < year_month_list.length; i++) {
         const ym = year_month_list[i];
@@ -290,7 +313,8 @@ async function main() {
             directories = [
                 'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts'
             ];
-        } else if (type == 'trust') {
+        }
+        else if (type == 'trust') {
             m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
             directories = [
                 'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
@@ -317,15 +341,20 @@ async function main() {
         console.log(error);
     });
 
+    console.log('Total count', total_count);
+    
     const currentDate = new Date();
-    console.log("total count", total_count);
-    let logtxt = `${type}, ${currentDate.toISOString().split('T')[0]}, ${total_count} downloads\n`;
+    let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} pds ${type}, download\n`;
+    console.log(logtxt);
     await fs.appendFile('log.txt', logtxt, function (err) {
         if (err) throw err;
     });
 
+    await send_team.sendMessageToTeamChannel(logtxt);
+    
     console.log('Done');
     process.exit(0);
 }
 
-main();
+
+cession_trust_download();
