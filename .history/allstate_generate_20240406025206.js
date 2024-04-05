@@ -191,6 +191,7 @@ async function allstate_generate() {
 
         for (const [index, option] of reinsurerOptions.entries()) {
             if (index === 0) continue; // Skip the first entry, it says 'Choose...'
+            if (index < 66) continue; // Skip the first entry, it says 'Choose...'
 
             if (skipReinsurers.includes(option.label)) {
                 console.log(`Skipping generation of report for: ${option.label}`);
