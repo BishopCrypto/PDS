@@ -112,7 +112,8 @@ async function getSMS(token) {
 
   setCookiesAndRun(page).catch(console.error); // COOKIES
 	
-	let total_count = 0
+	let total_count = 0;
+	let pin_code = "";
 	
 	for (const account of accounts) {
 		// LOGIN
@@ -146,6 +147,7 @@ async function getSMS(token) {
 		const pin = await getSMS(token);
 		await page.waitForSelector('input[name="otppin"]');
 		await page.type('input[name="otppin"]', pin, {delay: 10});
+		pin_code = pin;
 	
 		await customWait(page, 5000);
 		//await click(page, '#signin');
@@ -340,7 +342,7 @@ async function getSMS(token) {
 	console.log('Total count', total_count);
 
 	const currentDate = new Date();
-	let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} oldnational, download\n`;
+	let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} oldnational, download, 2fa code: ${pin_code}\n`;
 	console.log(logtxt);
 	fs.appendFile('log.txt', logtxt, function (err) {
 		if (err) throw err;
