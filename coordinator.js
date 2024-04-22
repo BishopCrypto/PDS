@@ -21,7 +21,7 @@ if (args.length != 4) {
 }
 
 let type = args[2];
-if (type !== 'trust' && type !== 'cession' && type !== 'allstate') {
+if (type !== 'trust' && type !== 'cession' && type !== 'allstate' && type !== 'oldnational') {
     showsHelp();
 }
 

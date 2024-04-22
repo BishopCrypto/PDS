@@ -1,3 +1,9 @@
+# Node Modules
 node_modules
+
+# VSCode
+.vscode
+.history
+
 uploader
 log.txt
