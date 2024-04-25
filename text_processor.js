@@ -5,6 +5,16 @@ const app = express()
 
 app.use(express.json())
 
+const send_team = require('./send_team');
+
+const sendTeam = async (logtxt) => {
+  const currentDate = new Date();
+  fs.appendFile('log.txt', `${currentDate.toISOString().split('T')[0]}, ` + logtxt, function (err) {
+    if (err) throw err;
+  });
+  await send_team.sendMessageToTeamChannel(logtxt);
+};
+
 app.post('/webhook-endpoint', (req, res) => {
   const response = req.body;
   const event = response["Event"];
@@ -18,9 +28,7 @@ app.post('/webhook-endpoint', (req, res) => {
       const smsContent = response["Data"]["SmsContent"];
       console.log(smsContent);
       const logtxt = `${smsContent}\n`;
-      fs.appendFile('log.txt', logtxt, function (err) {
-        if (err) throw err;
-      });
+      sendTeam(logtxt);
     }
     res.status(200).send('OK');
   }
