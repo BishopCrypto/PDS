@@ -37,4 +37,11 @@ app.post('/webhook-endpoint', (req, res) => {
   }
 })
 
+app.post('/email-webhook', (req, res) => {
+  const response = req.body;
+  console.log(response);
+  res.status(200).send('OK');
+})
+
+
 app.listen(3000, () => console.log('Server is listening on port 3000!'))
