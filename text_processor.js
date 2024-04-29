@@ -1,3 +1,4 @@
+const https = require('https');
 const fs = require('fs');
 const express = require('express')
 const crypto = require('crypto')
@@ -73,5 +74,9 @@ app.post('/email-webhook', (req, res) => {
   }
 })
 
+const privateKey = fs.readFileSync('key.pem', 'utf8');
+const certificate = fs.readFileSync('cert.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+const httpsServer = https.createServer(credentials, app);
 
-app.listen(3000, () => console.log('Server is listening on port 3000!'))
+httpsServer.listen(3000, () => console.log('HTTPS Server running on port 3000'));
