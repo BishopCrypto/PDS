@@ -6,6 +6,8 @@ const app = express()
 app.use(express.json())
 
 const send_team = require('./send_team');
+const subscription = require('./subscription');
+
 
 const sendTeam = async (logtxt) => {
   const currentDate = new Date();
@@ -14,6 +16,27 @@ const sendTeam = async (logtxt) => {
   });
   await send_team.sendMessageToTeamChannel(logtxt);
 };
+
+
+const sendEmails = async () => {
+  const email = await subscription.getEmails();
+  const subject = email.subject;
+  const content = email.body.content;
+  const preview = email.bodyPreview;
+  const sender = email.sender.emailAddress.address;
+  const receiver = email.toRecipients[0].emailAddress.address;
+
+  const teamcontent = content.replace('<html><head>', '<html><head>' + `From: ${sender}<br>` + `To: ${receiver}<br>` + `Subject: ${subject}<br><br>`);
+  const logcontent = `From: ${sender}\n` + `To: ${receiver}\n` + `Subject: ${subject}\n\n` + `Content: ${preview}`;
+  console.log(logcontent);
+
+  const currentDate = new Date();
+  fs.appendFile('log.txt', `${currentDate.toISOString().split('T')[0]}\n` + logcontent + "\n\n\n", function (err) {
+    if (err) throw err;
+  });
+  await send_team.sendMessageToTeamChannel(teamcontent);
+}
+
 
 app.post('/webhook-endpoint', (req, res) => {
   const response = req.body;
@@ -37,10 +60,17 @@ app.post('/webhook-endpoint', (req, res) => {
   }
 })
 
+
 app.post('/email-webhook', (req, res) => {
-  const response = req.body;
-  console.log(response);
-  res.status(200).send('OK');
+  if (req.query.validationToken) {
+    console.log("subscription validation");
+    res.send(req.query.validationToken);
+  }
+  else {
+    console.log("New email received");
+    sendEmails();
+    res.status(200).send('OK');
+  }
 })
 
 

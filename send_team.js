@@ -33,7 +33,8 @@ async function sendMessageToTeamChannel(message) {
     const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages`;
     const data = {
         "body": {
-            "content": message
+            "content": message,
+            "contentType": "html"
         }
     };
 
