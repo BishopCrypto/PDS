@@ -41,7 +41,7 @@ const accounts = [
   {
     username: 'HT9V297',
     password: 'OldNatverify*1',
-    groupdropdown: ['DLST00000'] // List of options for Account2 (TOTAL RELATIONSHIP GROUP ERROR)
+    groupdropdown: ['SLST00000'] // List of options for Account (TOTAL RELATIONSHIP GROUP ERROR)
   },
   // ... more accounts
 ];
@@ -214,8 +214,8 @@ async function getSMS(token) {
 				const groupselector='.GGCLPSCPD'; 
 				const companyselector=  '.GGCLPSCOD';
 
-				//click GROUP radio button to view by group which shows all companies at once
-				//turns out its different on dif pages.  await page.click('#gwt-uid-70');//click the group button so we can get all company from a group in one page
+				// click GROUP radio button to view by group which shows all companies at once
+				// turns out its different on dif pages.  await page.click('#gwt-uid-70'); // click the group button so we can get all company from a group in one page
 				await page.$$eval('span.gwt-RadioButton label', (labels) => {
 					// Find the label that contains exactly "&nbsp;Group:"
 					const groupLabel = labels.find(label => label.textContent.includes('\xa0Group:'));
@@ -225,13 +225,13 @@ async function getSMS(token) {
 					}
 				});
 
-				//select the GRoup drop down.  
+				// select the Group drop down.  
 				await page.waitForSelector(groupselector, { visible: true });
 				await page.select(groupselector, group);
 
-				//click the go button, on the right
+				// click the go button, on the right
 				await page.waitForTimeout(1000);
-				await page.click('button.wmsButtonFlash');  
+				await page.click('button.wmsButtonFlash');
 
 				// wait for the Please wait... popup to disappear (could be long)
 				await page.waitForFunction(() => {
