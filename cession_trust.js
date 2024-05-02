@@ -343,7 +343,7 @@ async function cession_trust_download() {
     if (err) throw err;
   });
 
-  await send_team.sendMessageToTeamChannel(logtxt);
+  await send_team.sendMessageToTeamChannel(logtxt, 'crawler');
   
   console.log('Done');
   process.exit(0);

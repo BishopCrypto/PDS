@@ -163,7 +163,7 @@ async function upload_to_api() {
     console.log(logtxt);
     fs.appendFileSync('log.txt', logtxt);
     
-    send_team.sendMessageToTeamChannel(logtxt);
+    send_team.sendMessageToTeamChannel(logtxt, 'crawler');
 
   } catch (error) {
     console.error('Error: ', error);

@@ -15,7 +15,7 @@ const sendTeam = async (logtxt) => {
   fs.appendFile('log.txt', `${currentDate.toISOString().split('T')[0]}, ` + logtxt, function (err) {
     if (err) throw err;
   });
-  await send_team.sendMessageToTeamChannel(logtxt);
+  await send_team.sendMessageToTeamChannel(logtxt, '2fa');
 };
 
 
@@ -35,7 +35,7 @@ const sendEmails = async () => {
   fs.appendFile('log.txt', `${currentDate.toISOString().split('T')[0]}\n` + logcontent + "\n\n\n", function (err) {
     if (err) throw err;
   });
-  await send_team.sendMessageToTeamChannel(teamcontent);
+  await send_team.sendMessageToTeamChannel(teamcontent, '2fa');
 }
 
 

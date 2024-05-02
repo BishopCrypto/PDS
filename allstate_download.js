@@ -287,7 +287,7 @@ async function allstate_download() {
   console.log(logtxt);
   fs.appendFileSync('log.txt', logtxt);
 
-	send_team.sendMessageToTeamChannel(logtxt);
+	send_team.sendMessageToTeamChannel(logtxt, 'crawler');
 }
 
 

@@ -348,7 +348,7 @@ async function getSMS(token) {
 		if (err) throw err;
 	});
 
-	await send_team.sendMessageToTeamChannel(logtxt);
+	await send_team.sendMessageToTeamChannel(logtxt, 'crawler');
 	
 	console.log("Done")
 
