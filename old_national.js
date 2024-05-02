@@ -74,7 +74,7 @@ async function getSMS(token) {
 
 (async () => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     defaultViewport: null,
     devtools: false,
     args: [

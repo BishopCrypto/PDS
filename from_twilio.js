@@ -6,15 +6,15 @@ const client = new twilio(mySID, myToken);
 
 
 function getMostRecentMessage(toNumber, callback) {
-    client.messages.list({to: toNumber, limit: 20}) 
-    .then(messages => {
-        let mostRecentMessage = messages[0];
-        callback(null, mostRecentMessage.body);
-    })
-    .catch(error => callback(error));
+  client.messages.list({to: toNumber, limit: 20}) 
+  .then(messages => {
+    let mostRecentMessage = messages[0];
+    callback(null, mostRecentMessage.body);
+  })
+  .catch(error => callback(error));
 }
 
 
 module.exports = {
-    getMostRecentMessage: getMostRecentMessage
+  getMostRecentMessage: getMostRecentMessage
 };

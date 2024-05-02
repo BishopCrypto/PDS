@@ -16,26 +16,26 @@
 
 
 function showsHelp(){
-    console.error('===================== Usage =====================');
-    console.error('Example: node allstate_download.js markgenova RAL9725RAL January 2024');
-    console.error('Example: node allstate_download.js markgenova RAL9725RAL current 2');
-    console.error('Example: node allstate_download.js markgenova1 RaL4100 December 2023');
-    process.exit(1);
+  console.error('===================== Usage =====================');
+  console.error('Example: node allstate_download.js markgenova RAL9725RAL January 2024');
+  console.error('Example: node allstate_download.js markgenova RAL9725RAL current 2');
+  console.error('Example: node allstate_download.js markgenova1 RaL4100 December 2023');
+  process.exit(1);
 }
 
 // Define a list of reinsurer names to skip
 const skipReinsurers = [
-    "BUCKLEY REINSURANCE, LTD.",
-    "CWK REINSURANCE, LTD.",
-    "EWF II REINSURANCE CO., LTD.",
-    "HEAD BROTHERS SERVICE REINSURANCE, LTD.",
-    "HESSER REINSURANCE COMPANY, LTD.",
-    "LONNIE COBB REINSURANCE, LTD.",
-    "LOVE REINSURANCE, LTD.",
-    "MAXWELL BAY REINSURANCE, LTD.",
-    "RAY BUICK 2 REINSURANCE, LTD.",
-    "TAYLOR & ROBBINS REINSURANCE, LTD.",
-    "WOLF PACK REINSURANCE, LTD."
+  "BUCKLEY REINSURANCE, LTD.",
+  "CWK REINSURANCE, LTD.",
+  "EWF II REINSURANCE CO., LTD.",
+  "HEAD BROTHERS SERVICE REINSURANCE, LTD.",
+  "HESSER REINSURANCE COMPANY, LTD.",
+  "LONNIE COBB REINSURANCE, LTD.",
+  "LOVE REINSURANCE, LTD.",
+  "MAXWELL BAY REINSURANCE, LTD.",
+  "RAY BUICK 2 REINSURANCE, LTD.",
+  "TAYLOR & ROBBINS REINSURANCE, LTD.",
+  "WOLF PACK REINSURANCE, LTD."
 ];
 
 
@@ -63,78 +63,78 @@ const downloadsUrl = 'https://allstatedealerservices.com/reports/downloads';
 
 // Functions
 function getUserInput() {
-    let args = process.argv;
-    // Check if all required arguments are provided    
-    if (args.length != 6) {
-        showsHelp();
-    }
-    
-    // Get command-line arguments instead
-    args = args.slice(2);
+  let args = process.argv;
+  // Check if all required arguments are provided    
+  if (args.length != 6) {
+    showsHelp();
+  }
+  
+  // Get command-line arguments instead
+  args = args.slice(2);
 
-    let [id, pw, month, year] = args;
+  let [id, pw, month, year] = args;
 
-    if (args[2] === 'current') {
-        let months = args[3];
-        const monthsAgo = new Date();
-        monthsAgo.setMonth(monthsAgo.getMonth() - months);
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        month = monthNames[monthsAgo.getMonth()];
-        year = monthsAgo.getFullYear();
-    }
-    
-    // Format month and year as monthValueToSelect
-    const monthValueToSelect = `${month} ${year}`;
+  if (args[2] === 'current') {
+    let months = args[3];
+    const monthsAgo = new Date();
+    monthsAgo.setMonth(monthsAgo.getMonth() - months);
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    month = monthNames[monthsAgo.getMonth()];
+    year = monthsAgo.getFullYear();
+  }
+  
+  // Format month and year as monthValueToSelect
+  const monthValueToSelect = `${month} ${year}`;
 
-    // Now you can use id, pw, and monthValueToSelect in your program
-    console.log("ID:", id);
-    console.log("Password:", pw);
-    console.log("Month Value To Select:", monthValueToSelect);
+  // Now you can use id, pw, and monthValueToSelect in your program
+  console.log("ID:", id);
+  console.log("Password:", pw);
+  console.log("Month Value To Select:", monthValueToSelect);
 
-    return { id, pw, monthValueToSelect };
+  return { id, pw, monthValueToSelect };
 }
 
 
 async function login(page, id, pw) {
-    console.log('Going to login URL...');
-    await page.goto(loginUrl, { waitUntil: 'load', timeout: 0 });
-    console.log('Waiting 1 seconds for login...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  console.log('Going to login URL...');
+  await page.goto(loginUrl, { waitUntil: 'load', timeout: 0 });
+  console.log('Waiting 1 seconds for login...');
+  await new Promise(resolve => setTimeout(resolve, 1000));
 
-    console.log('Typing username...');
-    await page.type("#Username", id);
+  console.log('Typing username...');
+  await page.type("#Username", id);
 
-    console.log('Typing password...');
-    await page.type('#Password', pw);
-    await new Promise(resolve => setTimeout(resolve, 200));
+  console.log('Typing password...');
+  await page.type('#Password', pw);
+  await new Promise(resolve => setTimeout(resolve, 200));
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    console.log('Clicking login button...');
-    await page.click('.login-btn');
+  await new Promise(resolve => setTimeout(resolve, 200));
+  console.log('Clicking login button...');
+  await page.click('.login-btn');
 
-    await new Promise(resolve => setTimeout(resolve, 200));
-    console.log('Done login');
+  await new Promise(resolve => setTimeout(resolve, 200));
+  console.log('Done login');
 
-    console.log('Waiting for download page...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+  console.log('Waiting for download page...');
+  await new Promise(resolve => setTimeout(resolve, 2000));
 }
 
 
 async function check_4_cookie_button(page) {
-    console.log('Clicking cookies button...');
+  console.log('Clicking cookies button...');
 
-    const cookiesButton = await page.$('a.btn-orange#privacylink3');
-    await new Promise(resolve => setTimeout(resolve, 3000));
+  const cookiesButton = await page.$('a.btn-orange#privacylink3');
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
-    if (cookiesButton) {
-        await Promise.all([
-            cookiesButton.click(),
-        ]);
-        console.log('Clicked cookies button. Waiting for calm...');
-    }
-    else {
-        console.log('Cookies button does not exist, skipping...');
-    }
+  if (cookiesButton) {
+    await Promise.all([
+      cookiesButton.click(),
+    ]);
+    console.log('Clicked cookies button. Waiting for calm...');
+  }
+  else {
+    console.log('Cookies button does not exist, skipping...');
+  }
 }
 
 
@@ -142,153 +142,152 @@ let downloadedReports = {};
 
 function renameRecentDownload(directoryPath, reinsurer, monthYear) {
 
-    console.log(directoryPath);
-    const files = fs.readdirSync(directoryPath);
+  console.log(directoryPath);
+  const files = fs.readdirSync(directoryPath);
 
-    if (files.length > 0) {
-        const newestFile = files.reduce((a, b) => {
-            const fullPathA = path.join(directoryPath, a);
-            const fullPathB = path.join(directoryPath, b);
-            const statA = fs.statSync(fullPathA);
-            const statB = fs.statSync(fullPathB);
-            return statA.mtime.getTime() > statB.mtime.getTime() ? a : b;
-        });
+  if (files.length > 0) {
+    const newestFile = files.reduce((a, b) => {
+      const fullPathA = path.join(directoryPath, a);
+      const fullPathB = path.join(directoryPath, b);
+      const statA = fs.statSync(fullPathA);
+      const statB = fs.statSync(fullPathB);
+      return statA.mtime.getTime() > statB.mtime.getTime() ? a : b;
+    });
 
-        console.log('Newest file:', newestFile);
-        // You can now use `newestFile` to access the file or its properties.
-        if (newestFile) {
-            const oldFilePath = path.join(directoryPath, newestFile);
-            const newFileName = `allstate_${monthYear} - ${reinsurer}.pdf`;
-            const newFilePath = path.join(directoryPath, newFileName);
+    console.log('Newest file:', newestFile);
+    // You can now use `newestFile` to access the file or its properties.
+    if (newestFile) {
+      const oldFilePath = path.join(directoryPath, newestFile);
+      const newFileName = `allstate_${monthYear} - ${reinsurer}.pdf`;
+      const newFilePath = path.join(directoryPath, newFileName);
 
-            // Check if the file with the new name already exists
-            if (fs.existsSync(newFilePath)) {
-                // If file exists, delete it
-                fs.unlinkSync(newFilePath);
-                console.log(`Deleted existing file: ${newFileName}`);
-            }
-            // Proceed to rename the file
-            fs.renameSync(oldFilePath, newFilePath);
-            console.log(`Renamed ${newestFile} to ${newFileName}`);
-
-        }
-        else {
-            console.log('No files found in the directory which is weird because we are here.');
-        }
+      // Check if the file with the new name already exists
+      if (fs.existsSync(newFilePath)) {
+        // If file exists, delete it
+        fs.unlinkSync(newFilePath);
+        console.log(`Deleted existing file: ${newFileName}`);
+      }
+      // Proceed to rename the file
+      fs.renameSync(oldFilePath, newFilePath);
+      console.log(`Renamed ${newestFile} to ${newFileName}`);
     }
     else {
-        console.log('No files found in the directory.');
+      console.log('No files found in the directory which is weird because we are here.');
     }
+  }
+  else {
+    console.log('No files found in the directory.');
+  }
 }
 
 
 async function allstate_download() {
-    const userInput = getUserInput();
-    const { id, pw, monthValueToSelect } = userInput;
+  const userInput = getUserInput();
+  const { id, pw, monthValueToSelect } = userInput;
 
-    const browser = await puppeteer.launch({
-        headless: true,
-        defaultViewport: null,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
-        timeout: 0,
-    });
+  const browser = await puppeteer.launch({
+    headless: true,
+    defaultViewport: null,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process'],
+    timeout: 0,
+  });
 
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
-    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+  const page = await browser.newPage();
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
+  await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
 
-    const downloadsFolder = path.resolve('./uploader/to_be_uploaded');
-    const client = await page.target().createCDPSession();
-    await client.send('Page.setDownloadBehavior', {
-        behavior: 'allow',
-        downloadPath: downloadsFolder
-    });
+  const downloadsFolder = path.resolve('./uploader/to_be_uploaded');
+  const client = await page.target().createCDPSession();
+  await client.send('Page.setDownloadBehavior', {
+    behavior: 'allow',
+    downloadPath: downloadsFolder
+  });
 
-    let total_count = 0;
-    try {
-        await login(page, id, pw);
+  let total_count = 0;
+  try {
+    await login(page, id, pw);
 
-        await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
-        await new Promise(resolve => setTimeout(resolve, 10000));
-        console.log("This is download page.");
-        
-        check_4_cookie_button(page);
-        await new Promise(resolve => setTimeout(resolve, 10000));
-
-        const tableRowsSelector = 'div > div:nth-child(2) > table > tbody > tr';
-        const extractedData = await page.$$eval(tableRowsSelector, (rows, monthValueToSelect) => {
-            return rows.map(row => {
-                const thElement = row.querySelector('th');
-                if (!thElement || !thElement.innerText.startsWith('Reinsurance Report |')) {
-                    return null;
-                }
-
-                const reportDetails = thElement.innerText.split('Reinsurance Report | ')[1];
-                const lastCommaIndex = reportDetails.lastIndexOf(',');
-                if (lastCommaIndex === -1) {
-                    return null;
-                }
-
-                const reinsurer = reportDetails.substring(0, lastCommaIndex).trim();
-                const monthYear = reportDetails.substring(lastCommaIndex + 1).trim();
-
-                const downloadLinkElement = row.querySelector('a.btn-green[href*="download"]');
-                const downloadSelector = downloadLinkElement ? `a[href='${downloadLinkElement.getAttribute('href')}']` : '';
-
-                const deleteLinkElement = row.querySelector('a.btn-green[href*="delete"]');
-                const deleteSelector = deleteLinkElement ? `a[href='${deleteLinkElement.getAttribute('href')}']` : '';
-
-                return { reinsurer, monthYear, downloadSelector, deleteSelector };
-            }).filter(item => item && item.downloadSelector && item.monthYear === monthValueToSelect);
-        }, monthValueToSelect);
-
-        console.log(extractedData);
-        
-        if (extractedData.length > 0) {
-            for (const { reinsurer, monthYear, downloadSelector, deleteSelector } of extractedData) {
-                if (skipReinsurers.includes(reinsurer)) {
-                    console.log(`Skipping download for: ${reinsurer}`);
-                    continue;
-                }
-                console.log(`\nAttempting to download report for: ${reinsurer}, ${monthYear}`);
-                try {
-                    await page.click(downloadSelector);
-
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    renameRecentDownload(downloadsFolder, reinsurer, monthYear);
-                    if (!downloadedReports[reinsurer]) {
-                        downloadedReports[reinsurer] = {};
-                    }
-                    downloadedReports[reinsurer][monthYear] = true;
-                    
-                    await page.click(deleteSelector);
-                    await new Promise(resolve => setTimeout(resolve, 2000));
-                    total_count ++;
-                } catch (error) {
-                    console.error(`Error while downloading report for ${reinsurer}, ${monthYear}:`, error);
-                }
-            }
-        }
-        else {
-            console.log('No download links found in the reports table, so moving on to generate some.');
-        }
-        await page.goto(downloadsUrl, { waitUntil: 'networkidle0', timeout: 0 });
-
-    } catch (error) {
-        console.error('An error occurred:', error);
-    } finally {
-        await browser.close();
-    }
-    console.log('\nDone downloading all reports for Month Year combo and ID.');
-
-    console.log('\nTotal count', total_count);
+    await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    console.log("This is download page.");
     
-    const currentDate = new Date();
-    let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} allstate, download\n`;
-    console.log(logtxt);
-    fs.appendFileSync('log.txt', logtxt);
+    check_4_cookie_button(page);
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
-    send_team.sendMessageToTeamChannel(logtxt);
+    const tableRowsSelector = 'div > div:nth-child(2) > table > tbody > tr';
+    const extractedData = await page.$$eval(tableRowsSelector, (rows, monthValueToSelect) => {
+      return rows.map(row => {
+        const thElement = row.querySelector('th');
+        if (!thElement || !thElement.innerText.startsWith('Reinsurance Report |')) {
+            return null;
+        }
+
+        const reportDetails = thElement.innerText.split('Reinsurance Report | ')[1];
+        const lastCommaIndex = reportDetails.lastIndexOf(',');
+        if (lastCommaIndex === -1) {
+            return null;
+        }
+
+        const reinsurer = reportDetails.substring(0, lastCommaIndex).trim();
+        const monthYear = reportDetails.substring(lastCommaIndex + 1).trim();
+
+        const downloadLinkElement = row.querySelector('a.btn-green[href*="download"]');
+        const downloadSelector = downloadLinkElement ? `a[href='${downloadLinkElement.getAttribute('href')}']` : '';
+
+        const deleteLinkElement = row.querySelector('a.btn-green[href*="delete"]');
+        const deleteSelector = deleteLinkElement ? `a[href='${deleteLinkElement.getAttribute('href')}']` : '';
+
+        return { reinsurer, monthYear, downloadSelector, deleteSelector };
+      }).filter(item => item && item.downloadSelector && item.monthYear === monthValueToSelect);
+    }, monthValueToSelect);
+
+    console.log(extractedData);
+      
+    if (extractedData.length > 0) {
+      for (const { reinsurer, monthYear, downloadSelector, deleteSelector } of extractedData) {
+        if (skipReinsurers.includes(reinsurer)) {
+          console.log(`Skipping download for: ${reinsurer}`);
+          continue;
+        }
+        console.log(`\nAttempting to download report for: ${reinsurer}, ${monthYear}`);
+        try {
+          await page.click(downloadSelector);
+
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          renameRecentDownload(downloadsFolder, reinsurer, monthYear);
+          if (!downloadedReports[reinsurer]) {
+            downloadedReports[reinsurer] = {};
+          }
+          downloadedReports[reinsurer][monthYear] = true;
+          
+          await page.click(deleteSelector);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          total_count ++;
+        } catch (error) {
+          console.error(`Error while downloading report for ${reinsurer}, ${monthYear}:`, error);
+        }
+        }
+    }
+    else {
+      console.log('No download links found in the reports table, so moving on to generate some.');
+    }
+    await page.goto(downloadsUrl, { waitUntil: 'networkidle0', timeout: 0 });
+
+  } catch (error) {
+    console.error('An error occurred:', error);
+  } finally {
+    await browser.close();
+  }
+  console.log('\nDone downloading all reports for Month Year combo and ID.');
+
+  console.log('\nTotal count', total_count);
+		
+  const currentDate = new Date();
+  let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} allstate, download\n`;
+  console.log(logtxt);
+  fs.appendFileSync('log.txt', logtxt);
+
+	send_team.sendMessageToTeamChannel(logtxt);
 }
 
 
