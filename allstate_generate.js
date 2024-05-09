@@ -95,10 +95,12 @@ function getUserInput() {
 }
 
 
-async function login(page, id, pw) {
+async function login(page, id, pw, scrshot_path) {
   console.log('Going to login URL...');
   await page.goto(loginUrl, { waitUntil: 'load', timeout: 0 });
   console.log('Waiting 1 seconds for login...');
+  await page.screenshot({path: `./screenshots/${scrshot_path}/1.jpg`});
+  console.log(`1.jpg generated`);
   await new Promise(resolve => setTimeout(resolve, 1000));
 
   console.log('Typing username...');
@@ -107,6 +109,8 @@ async function login(page, id, pw) {
   console.log('Typing password...');
   await page.type('#Password', pw);
   await new Promise(resolve => setTimeout(resolve, 200));
+  await page.screenshot({path: `./screenshots/${scrshot_path}/2.jpg`});
+  console.log(`2.jpg generated`);
 
   await new Promise(resolve => setTimeout(resolve, 200));
   console.log('Clicking login button...');
@@ -142,6 +146,15 @@ async function allstate_generate() {
   const userInput = getUserInput();
   const { id, pw, monthValueToSelect } = userInput;
 
+  const currentDate = new Date();
+  const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-generate-${id}-${monthValueToSelect}`;
+  fs.mkdirSync(`screenshots\\${scrshot_path}`, { recursive: true }, (err) => {
+    if (err) {
+      return console.error(err);
+    }
+  });
+  console.log(`All screenshots are saved into '${scrshot_path}' folder`);
+
   const browser = await puppeteer.launch({
     headless: true,
     defaultViewport: null,
@@ -149,31 +162,40 @@ async function allstate_generate() {
     timeout: 0,
   });
 
-  const page = await browser.newPage();
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
-  await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
-
-  const downloadsFolder = path.resolve('./uploader/to_be_uploaded');
-  const client = await page.target().createCDPSession();
-  await client.send('Page.setDownloadBehavior', {
-    behavior: 'allow',
-    downloadPath: downloadsFolder
-  });
-
   let total_count = 0;
+
   try {
-    await login(page, id, pw);
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36');
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
+
+    const downloadsFolder = path.resolve('./uploader/to_be_uploaded');
+    const client = await page.target().createCDPSession();
+    await client.send('Page.setDownloadBehavior', {
+      behavior: 'allow',
+      downloadPath: downloadsFolder
+    });
+
+    await login(page, id, pw, scrshot_path);
+    await page.screenshot({path: `./screenshots/${scrshot_path}/3.jpg`});
+    console.log(`3.jpg generated`);
 
     await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
     await new Promise(resolve => setTimeout(resolve, 10000));
     console.log("This is download page.");
+    await page.screenshot({path: `./screenshots/${scrshot_path}/4.jpg`});
+    console.log(`4.jpg generated`);
     
     check_4_cookie_button(page);
     await new Promise(resolve => setTimeout(resolve, 10000));
+    await page.screenshot({path: `./screenshots/${scrshot_path}/5.jpg`});
+    console.log(`5.jpg generated`);
 
     await page.goto(reportsUrl, { waitUntil: 'networkidle0', timeout: 0 });
     await page.waitForSelector('#inputReinsurer', { timeout: 0 });
     console.log("This is report page.");
+    await page.screenshot({path: `./screenshots/${scrshot_path}/6.jpg`});
+    console.log(`6.jpg generated`);
     
     const buttonSelector = '#reinsuranceRegisterReportSection > form > div > div > div.col-12.mt-3.text-right > button';
     const dropdownSelector = '#inputReinsurer';
@@ -207,6 +229,8 @@ async function allstate_generate() {
 
       console.log('Clicking generate report button...');
       await page.click(buttonSelector);
+      await page.screenshot({path: `./screenshots/${scrshot_path}/7_${total_count}.jpg`});
+      console.log(`7_${total_count}.jpg generated`);
 
       await page.waitForFunction(
         text => document.body.innerText.includes(text),
@@ -229,21 +253,23 @@ async function allstate_generate() {
       await page.reload({ waitUntil: 'networkidle0', timeout: 100000 });
       await page.waitForSelector(dropdownSelector, { visible: true, timeout: 0 });
     }
+    await page.screenshot({path: `./screenshots/${scrshot_path}/8.jpg`});
+    console.log(`8.jpg generated`);
+
+    console.log('\nDone generating all reports for Month Year combo and ID.');
+    console.log('\nTotal count:', total_count);
+    
+    let logtxt = `${currentDate.toISOString().split('T')[0]}, allstate, generate, ${id}, ${total_count}\n`;
+    console.log(logtxt);
+    fs.appendFileSync('log.txt', logtxt);
+
+    send_team.sendMessageToTeamChannel(logtxt, 'crawler');
+    
   } catch (error) {
     console.error('An error occurred:', error);
   } finally {
     await browser.close();
   }
-  console.log('\nDone generating all reports for Month Year combo and ID.');
-
-  console.log('\nTotal count', total_count);
-  
-  const currentDate = new Date();
-  let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} allstate, generate\n`;
-  console.log(logtxt);
-  fs.appendFileSync('log.txt', logtxt);
-
-  send_team.sendMessageToTeamChannel(logtxt, 'crawler');
 }
 
 

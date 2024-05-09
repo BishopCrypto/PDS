@@ -304,13 +304,13 @@ async function cession_trust_download() {
     if (type == 'cession') {
       m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetCessionTree?u=${uak}&d=${ym}`);
       directories = [
-          'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts'
+        'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts'
       ];
     }
     else if (type == 'trust') {
       m_urls = await fetchData(`https://www.pdsadm.com/PAnet/json.svc/GetTrustTree?u=${uak}&d=${ym}`);
       directories = [
-          'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
+        'Texas GAP', 'GAP', 'PPM', 'Protection', 'TheftDeterrent', 'VscRefund', 'Dimension', 'Service Contracts', 'Trust Account Statements'
       ];
     }
     
@@ -334,10 +334,10 @@ async function cession_trust_download() {
     console.log(error);
   });
 
-  console.log('Total count', total_count);
+  console.log('Total count:', total_count);
   
   const currentDate = new Date();
-  let logtxt = `${currentDate.toISOString().split('T')[0]}, ${total_count} pds ${type}, download\n`;
+  let logtxt = `${currentDate.toISOString().split('T')[0]}, pds ${type}, download, ${masterUser}, ${total_count}\n`;
   console.log(logtxt);
   await fs.appendFile('log.txt', logtxt, function (err) {
     if (err) throw err;
