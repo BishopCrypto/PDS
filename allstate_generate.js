@@ -19,7 +19,7 @@ function showsHelp(){
   console.error('===================== Usage =====================');
   console.error('Example: node allstate_generate.js markgenova RAL9725RAL January 2024');
   console.error('Example: node allstate_generate.js markgenova RAL9725RAL current 2');
-  console.error('Example: node allstate_generate.js markgenova1 RaL4100 December 2023');
+  console.error('Example: node allstate_generate.js markgenova1 RaL4100 current 2');
   process.exit(1);
 }
 
@@ -253,6 +253,7 @@ async function allstate_generate() {
       await page.reload({ waitUntil: 'networkidle0', timeout: 100000 });
       await page.waitForSelector(dropdownSelector, { visible: true, timeout: 0 });
     }
+    await new Promise(resolve => setTimeout(resolve, 5000));
     await page.screenshot({path: `../azure-screenshots/${scrshot_path}/8.jpg`});
     console.log(`8.jpg generated`);
 
