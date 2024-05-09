@@ -208,7 +208,7 @@ async function old_national() {
 			
 			const currentDate = new Date();
 			const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-oldnational-${account.username}-${year}-${month}`;
-			fs.mkdirSync(`./screenshots/${scrshot_path}`, { recursive: true }, (err) => {
+			fs.mkdirSync(`../azure-screenshots/${scrshot_path}`, { recursive: true }, (err) => {
 				if (err) {
 					return console.error(err);
 				}
@@ -221,7 +221,7 @@ async function old_national() {
 			await page.goto(loginUrl, { waitUntil: 'domcontentloaded' });
 			await new Promise(resolve => setTimeout(resolve, 10000));
 
-			await page.screenshot({path: `./screenshots/${scrshot_path}/0.jpg`});
+			await page.screenshot({path: `../azure-screenshots/${scrshot_path}/0.jpg`});
     	console.log(`0.jpg generated`);
 			
 			const cookiesButton = await page.$('#onetrust-accept-btn-handler');
@@ -237,14 +237,14 @@ async function old_national() {
 				console.log('Cookies button does not exist, skipping...');
 			}
 			await new Promise(resolve => setTimeout(resolve, 5000));
-			await page.screenshot({path: `./screenshots/${scrshot_path}/1.jpg`});
+			await page.screenshot({path: `../azure-screenshots/${scrshot_path}/1.jpg`});
     	console.log(`1.jpg generated`);
 
 			await setCookiesAndRun(page).catch(console.error); // COOKIES (again just in case??)
 
 			await page.waitForSelector('input[name="loginName"]');
 			await page.type('input[name="loginName"]', account.username, {delay: 10});
-			await page.screenshot({path: `./screenshots/${scrshot_path}/2.jpg`});
+			await page.screenshot({path: `../azure-screenshots/${scrshot_path}/2.jpg`});
     	console.log(`2.jpg generated`);
 			
 			const proceedButton1 = await page.$x("//button[contains(., 'Proceed')]");
@@ -255,7 +255,7 @@ async function old_national() {
 			await page.waitForSelector('input[name="password"]');
 			await page.type('input[name="password"]', account.password, {delay: 10});
 			await customWait(page, 3000);
-			await page.screenshot({path: `./screenshots/${scrshot_path}/3.jpg`});
+			await page.screenshot({path: `../azure-screenshots/${scrshot_path}/3.jpg`});
     	console.log(`3.jpg generated`);
 
 			const token = await generateBearerToken();
@@ -263,7 +263,7 @@ async function old_national() {
 			await page.waitForSelector('input[name="otppin"]');
 			await page.type('input[name="otppin"]', pin, {delay: 10});
 			pin_code = pin;
-			await page.screenshot({path: `./screenshots/${scrshot_path}/4.jpg`});
+			await page.screenshot({path: `../azure-screenshots/${scrshot_path}/4.jpg`});
     	console.log(`4.jpg generated`);
 
 			await customWait(page, 5000);
@@ -272,7 +272,7 @@ async function old_national() {
 			if (proceedButton2.length > 0) {
 				await proceedButton2[0].click();
 			}
-			await page.screenshot({path: `./screenshots/${scrshot_path}/5.jpg`});
+			await page.screenshot({path: `../azure-screenshots/${scrshot_path}/5.jpg`});
     	console.log(`5.jpg generated`);
 
 			await customWait(page, 5000);
@@ -317,7 +317,7 @@ async function old_national() {
 						await customWait(page, 2000);
 					}
 				}
-				await page.screenshot({path: `./screenshots/${scrshot_path}/6.jpg`});
+				await page.screenshot({path: `../azure-screenshots/${scrshot_path}/6.jpg`});
     		console.log(`6.jpg generated`);
 				
 				if (!statementsMenuItemFound) {
@@ -348,13 +348,13 @@ async function old_national() {
 					// select the Group drop down.  
 					await page.waitForSelector(groupselector, { visible: true });
 					await page.select(groupselector, group);
-					await page.screenshot({path: `./screenshots/${scrshot_path}/7.jpg`});
+					await page.screenshot({path: `../azure-screenshots/${scrshot_path}/7.jpg`});
     			console.log(`7.jpg generated`);
 
 					// click the go button, on the right
 					await new Promise(resolve => setTimeout(resolve, 1000));
 					await page.click('button.wmsButtonFlash');
-					await page.screenshot({path: `./screenshots/${scrshot_path}/8.jpg`});
+					await page.screenshot({path: `../azure-screenshots/${scrshot_path}/8.jpg`});
     			console.log(`8.jpg generated`);
 
 					// wait for the Please wait... popup to disappear (could be long)
@@ -426,7 +426,7 @@ async function old_national() {
 						try {
 							const downloadedFilePath = await waitForDownloadComplete(downloadsFolderPath);
 							console.log(`New file downloaded at: ${downloadedFilePath}`);
-							await page.screenshot({path: `./screenshots/${scrshot_path}/9_${total_count}.jpg`});
+							await page.screenshot({path: `../azure-screenshots/${scrshot_path}/9_${total_count}.jpg`});
     					console.log(`9_${total_count}.jpg generated`);
 
 							// Now that you have the path, you can rename the file as needed
@@ -457,7 +457,7 @@ async function old_national() {
 					console.error('Failed to log out:', logoutError);
 				}
 				await new Promise(resolve => setTimeout(resolve, 5000));
-				await page.screenshot({path: `./screenshots/${scrshot_path}/10.jpg`});
+				await page.screenshot({path: `../azure-screenshots/${scrshot_path}/10.jpg`});
 				console.log(`10.jpg generated`);
 
 				console.log(`\nDone downloading all reports for ${account.username}.`);

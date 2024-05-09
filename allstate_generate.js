@@ -99,7 +99,7 @@ async function login(page, id, pw, scrshot_path) {
   console.log('Going to login URL...');
   await page.goto(loginUrl, { waitUntil: 'load', timeout: 0 });
   console.log('Waiting 1 seconds for login...');
-  await page.screenshot({path: `./screenshots/${scrshot_path}/1.jpg`});
+  await page.screenshot({path: `../azure-screenshots/${scrshot_path}/1.jpg`});
   console.log(`1.jpg generated`);
   await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -109,7 +109,7 @@ async function login(page, id, pw, scrshot_path) {
   console.log('Typing password...');
   await page.type('#Password', pw);
   await new Promise(resolve => setTimeout(resolve, 200));
-  await page.screenshot({path: `./screenshots/${scrshot_path}/2.jpg`});
+  await page.screenshot({path: `../azure-screenshots/${scrshot_path}/2.jpg`});
   console.log(`2.jpg generated`);
 
   await new Promise(resolve => setTimeout(resolve, 200));
@@ -148,7 +148,7 @@ async function allstate_generate() {
 
   const currentDate = new Date();
   const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-generate-${id}-${monthValueToSelect}`;
-  fs.mkdirSync(`./screenshots/${scrshot_path}`, { recursive: true }, (err) => {
+  fs.mkdirSync(`../azure-screenshots/${scrshot_path}`, { recursive: true }, (err) => {
     if (err) {
       return console.error(err);
     }
@@ -177,24 +177,24 @@ async function allstate_generate() {
     });
 
     await login(page, id, pw, scrshot_path);
-    await page.screenshot({path: `./screenshots/${scrshot_path}/3.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/3.jpg`});
     console.log(`3.jpg generated`);
 
     await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
     await new Promise(resolve => setTimeout(resolve, 10000));
     console.log("This is download page.");
-    await page.screenshot({path: `./screenshots/${scrshot_path}/4.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/4.jpg`});
     console.log(`4.jpg generated`);
     
     check_4_cookie_button(page);
     await new Promise(resolve => setTimeout(resolve, 10000));
-    await page.screenshot({path: `./screenshots/${scrshot_path}/5.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/5.jpg`});
     console.log(`5.jpg generated`);
 
     await page.goto(reportsUrl, { waitUntil: 'networkidle0', timeout: 0 });
     await page.waitForSelector('#inputReinsurer', { timeout: 0 });
     console.log("This is report page.");
-    await page.screenshot({path: `./screenshots/${scrshot_path}/6.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/6.jpg`});
     console.log(`6.jpg generated`);
     
     const buttonSelector = '#reinsuranceRegisterReportSection > form > div > div > div.col-12.mt-3.text-right > button';
@@ -229,7 +229,7 @@ async function allstate_generate() {
 
       console.log('Clicking generate report button...');
       await page.click(buttonSelector);
-      await page.screenshot({path: `./screenshots/${scrshot_path}/7_${total_count}.jpg`});
+      await page.screenshot({path: `../azure-screenshots/${scrshot_path}/7_${total_count}.jpg`});
       console.log(`7_${total_count}.jpg generated`);
 
       await page.waitForFunction(
@@ -253,7 +253,7 @@ async function allstate_generate() {
       await page.reload({ waitUntil: 'networkidle0', timeout: 100000 });
       await page.waitForSelector(dropdownSelector, { visible: true, timeout: 0 });
     }
-    await page.screenshot({path: `./screenshots/${scrshot_path}/8.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/8.jpg`});
     console.log(`8.jpg generated`);
 
     console.log('\nDone generating all reports for Month Year combo and ID.');

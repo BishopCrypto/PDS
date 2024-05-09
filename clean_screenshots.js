@@ -26,4 +26,4 @@ function deleteOldDirs(dirPath) {
 }
 
 
-deleteOldDirs("screenshots");
+deleteOldDirs("../azure-screenshots");

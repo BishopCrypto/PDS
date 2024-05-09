@@ -100,7 +100,7 @@ async function login(page, id, pw, scrshot_path) {
   console.log('Going to login URL...');
   await page.goto(loginUrl, { waitUntil: 'load', timeout: 0 });
   console.log('Waiting 1 seconds for login...');
-  await page.screenshot({path: `./screenshots/${scrshot_path}/1.jpg`});
+  await page.screenshot({path: `../azure-screenshots/${scrshot_path}/1.jpg`});
   console.log(`1.jpg generated`);
   await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -110,7 +110,7 @@ async function login(page, id, pw, scrshot_path) {
   console.log('Typing password...');
   await page.type('#Password', pw);
   await new Promise(resolve => setTimeout(resolve, 200));
-  await page.screenshot({path: `./screenshots/${scrshot_path}/2.jpg`});
+  await page.screenshot({path: `../azure-screenshots/${scrshot_path}/2.jpg`});
   console.log(`2.jpg generated`);
 
   await new Promise(resolve => setTimeout(resolve, 200));
@@ -192,7 +192,7 @@ async function allstate_download() {
 
   const currentDate = new Date();
   const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-download-${id}-${monthValueToSelect}`;
-  fs.mkdirSync(`./screenshots/${scrshot_path}`, { recursive: true }, (err) => {
+  fs.mkdirSync(`../azure-screenshots/${scrshot_path}`, { recursive: true }, (err) => {
     if (err) {
       return console.error(err);
     }
@@ -221,18 +221,18 @@ async function allstate_download() {
     });
     
     await login(page, id, pw, scrshot_path);
-    await page.screenshot({path: `./screenshots/${scrshot_path}/3.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/3.jpg`});
     console.log(`3.jpg generated`);
 
     await page.goto(downloadsUrl, { waitUntil: 'networkidle2' });
     await new Promise(resolve => setTimeout(resolve, 10000));
     console.log("This is download page.");
-    await page.screenshot({path: `./screenshots/${scrshot_path}/4.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/4.jpg`});
     console.log(`4.jpg generated`);
     
     check_4_cookie_button(page);
     await new Promise(resolve => setTimeout(resolve, 10000));
-    await page.screenshot({path: `./screenshots/${scrshot_path}/5.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/5.jpg`});
     console.log(`5.jpg generated`);
 
     const tableRowsSelector = 'div > div:nth-child(2) > table > tbody > tr';
@@ -274,7 +274,7 @@ async function allstate_download() {
         console.log(`\nAttempting to download report for: ${reinsurer}, ${monthYear}`);
         try {
           await page.click(downloadSelector);
-          await page.screenshot({path: `./screenshots/${scrshot_path}/6_${total_count}.jpg`});
+          await page.screenshot({path: `../azure-screenshots/${scrshot_path}/6_${total_count}.jpg`});
           console.log(`6_${total_count}.jpg generated`);
 
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -295,7 +295,7 @@ async function allstate_download() {
     else {
       console.log('No download links found in the reports table, so moving on to generate some.');
     }
-    await page.screenshot({path: `./screenshots/${scrshot_path}/7.jpg`});
+    await page.screenshot({path: `../azure-screenshots/${scrshot_path}/7.jpg`});
     console.log(`7.jpg generated`);
     await page.goto(downloadsUrl, { waitUntil: 'networkidle0', timeout: 0 });
 
