@@ -148,7 +148,7 @@ async function allstate_generate() {
 
   const currentDate = new Date();
   const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-generate-${id}-${monthValueToSelect}`;
-  fs.mkdirSync(`screenshots\\${scrshot_path}`, { recursive: true }, (err) => {
+  fs.mkdirSync(`./screenshots/${scrshot_path}`, { recursive: true }, (err) => {
     if (err) {
       return console.error(err);
     }

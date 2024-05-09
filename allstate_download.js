@@ -192,7 +192,7 @@ async function allstate_download() {
 
   const currentDate = new Date();
   const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-download-${id}-${monthValueToSelect}`;
-  fs.mkdirSync(`screenshots\\${scrshot_path}`, { recursive: true }, (err) => {
+  fs.mkdirSync(`./screenshots/${scrshot_path}`, { recursive: true }, (err) => {
     if (err) {
       return console.error(err);
     }

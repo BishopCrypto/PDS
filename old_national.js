@@ -208,7 +208,7 @@ async function old_national() {
 			
 			const currentDate = new Date();
 			const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-oldnational-${account.username}-${year}-${month}`;
-			fs.mkdirSync(`screenshots\\${scrshot_path}`, { recursive: true }, (err) => {
+			fs.mkdirSync(`./screenshots/${scrshot_path}`, { recursive: true }, (err) => {
 				if (err) {
 					return console.error(err);
 				}
