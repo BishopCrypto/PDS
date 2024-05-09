@@ -9,7 +9,7 @@ function deleteOldDirs(dirPath) {
 
     for(let name of dirNames){
       const folderDate = new Date(name.split('-').slice(0, 3).join('-')).getTime();
-      const days = 7 * 24 * 60 * 60 * 1000; // One week in milliseconds
+      const days = 30 * 24 * 60 * 60 * 1000; // One month
 
       // If the folder is older than one week, delete it
       if(now - folderDate > days){
