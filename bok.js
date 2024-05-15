@@ -4,27 +4,49 @@ const path = require('path');
 const send_team = require('./send_team');
 
 
+function showsHelp(){
+  console.error('===================== Usage =====================');
+  console.error('Example: node bok.js 202401');
+  console.error('Example: node bok.js current 1');
+  process.exit(1);
+}
+
 // Check if the user has provided a parameter
-if (process.argv.length < 3) {
-  console.log("You need to include a date parameter in the format YYYYMM.");
-  process.exit(1); // Exit with an error code
+if (process.argv.length != 3 && process.argv.length != 4) {
+  showsHelp();
 }
 
-// Extract the parameter
-const dateParam = process.argv[2];
+let year, month;
 
-// Validate the date parameter format
-const datePattern = /^(?<year>\d{4})(?<month>\d{2})$/;
-const match = dateParam.match(datePattern);
+if (process.argv.length == 3) {
+	// Extract the parameter
+	const dateParam = process.argv[2];
 
-if (!match) {
-  console.log("The date parameter is not in the correct format. Please use YYYYMM.");
-  process.exit(1); // Exit with an error code
+	// Validate the date parameter format
+	const datePattern = /^(?<year>\d{4})(?<month>\d{2})$/;
+	const match = dateParam.match(datePattern);
+
+	if (!match) {
+		console.log("The date parameter is not in the correct format. Please use YYYYMM.");
+		process.exit(1); // Exit with an error code
+	}
+	// Separate the year and month
+	year = match.groups.year;
+	month = match.groups.month;
 }
 
-
-// Separate the year and month
-const { year, month } = match.groups;
+if (process.argv.length == 4) {
+	if (process.argv[2] == 'current') {
+		let months = process.argv[3];
+    const monthsAgo = new Date();
+    monthsAgo.setMonth(monthsAgo.getMonth() - months);
+		year = monthsAgo.getFullYear();
+		month = String(monthsAgo.getMonth() + 1).padStart(2, '0');
+	}
+	else {
+		showsHelp();
+	}
+}
 
 console.log(`Year: ${year}, Month: ${month}`);
 
