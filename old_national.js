@@ -324,15 +324,17 @@ async function old_national() {
 					console.error(`Failed to click on the Statements menu item after multiple retries: ${account.username}`);
 					break;
 				}
-				// done clicking Statements
 
+				// done clicking Statements
 				await customWait(page, 2000);
+
+				let group_num = 0;
 
 				// this is the GROUP selection
 				for (const group of account.groupdropdown) {
 					console.log("Group: " + group);
-					const groupselector='.GGCLPSCPD'; 
-					const companyselector=  '.GGCLPSCOD';
+					const groupselector = '.GGCLPSCPD'; 
+					const companyselector = '.GGCLPSCOD';
 
 					// click GROUP radio button to view by group which shows all companies at once
 					// turns out its different on dif pages.  await page.click('#gwt-uid-70'); // click the group button so we can get all company from a group in one page
@@ -348,14 +350,17 @@ async function old_national() {
 					// select the Group drop down.  
 					await page.waitForSelector(groupselector, { visible: true });
 					await page.select(groupselector, group);
-					await page.screenshot({path: `../azure-screenshots/${scrshot_path}/7.jpg`});
-    			console.log(`7.jpg generated`);
+					await new Promise(resolve => setTimeout(resolve, 1000));
+					await page.screenshot({path: `../azure-screenshots/${scrshot_path}/7_${group_num}.jpg`});
+    			console.log(`7_${group_num}.jpg generated`);
 
 					// click the go button, on the right
-					await new Promise(resolve => setTimeout(resolve, 1000));
 					await page.click('button.wmsButtonFlash');
-					await page.screenshot({path: `../azure-screenshots/${scrshot_path}/8.jpg`});
-    			console.log(`8.jpg generated`);
+					await new Promise(resolve => setTimeout(resolve, 3000));
+					await page.screenshot({path: `../azure-screenshots/${scrshot_path}/8_${group_num}.jpg`});
+    			console.log(`8_${group_num}.jpg generated`);
+
+					group_num ++;
 
 					// wait for the Please wait... popup to disappear (could be long)
 					await page.waitForFunction(() => {
@@ -420,7 +425,7 @@ async function old_national() {
 								anchor.click(); // Trigger download
 							}
 						}, link.href);
-						console.log("Trigger the download")
+						console.log("Trigger the download");
 						
 						// filenames are all identical.  change them.
 						try {
@@ -442,6 +447,18 @@ async function old_national() {
 					}
 				}
 				await new Promise(resolve => setTimeout(resolve, 4000));
+
+				console.log(`\nDone downloading all reports for ${account.username}.`);
+				console.log(`Total count for ${account.username}:`, total_count);
+
+				let logtxt = `${currentDate.toISOString().split('T')[0]}, oldnational, download, ${account.username}, ${total_count}, (2fa code: ${pin_code})\n`;
+				console.log(logtxt);
+				fs.appendFile('log.txt', logtxt, function (err) {
+					if (err) throw err;
+				});
+
+				await send_team.sendMessageToTeamChannel(logtxt, 'crawler');
+
 			} catch (error) {
 				console.error('An error occurred:', error);
 			} finally {
@@ -457,19 +474,9 @@ async function old_national() {
 					console.error('Failed to log out:', logoutError);
 				}
 				await new Promise(resolve => setTimeout(resolve, 5000));
+				
 				await page.screenshot({path: `../azure-screenshots/${scrshot_path}/10.jpg`});
 				console.log(`10.jpg generated`);
-
-				console.log(`\nDone downloading all reports for ${account.username}.`);
-				console.log(`Total count for ${account.username}:`, total_count);
-
-				let logtxt = `${currentDate.toISOString().split('T')[0]}, oldnational, download, ${account.username}, ${total_count}, (2fa code: ${pin_code})\n`;
-				console.log(logtxt);
-				fs.appendFile('log.txt', logtxt, function (err) {
-					if (err) throw err;
-				});
-
-				// await send_team.sendMessageToTeamChannel(logtxt, 'crawler');
 			}
 		}
 	} catch (error) {
