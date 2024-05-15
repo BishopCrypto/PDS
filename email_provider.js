@@ -2,7 +2,6 @@ const fs = require('fs');
 
 const send_team = require('./send_team');
 const subscription = require('./subscription');
-const { start } = require('repl');
 
 const sendEmails = async () => {
   const start_time = Date.now();
