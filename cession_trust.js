@@ -93,22 +93,18 @@ function generateMonths(yearMonthStart, yearMonthEnd) {
 
 const year_month_list = generateMonths(startDate, endDate);
 
-const filePath = type=='cession' ? './filter_cessions.csv' : './filter_trusts.csv';
-const csv = require('csv-parser');
 
-const results = [];
-const filters = []
-fsnp.createReadStream(filePath)
-  .pipe(csv())
-  .on('data', (data) => results.push(data))
-  .on('end', () => {
-    // Process the data here
-    results.map(record => {
-      if (record['To be uploaded'] == 'YES') {
-          filters.push(record)
-      }
-    })
-  });
+const XLSX = require('xlsx');
+
+let workbook = XLSX.readFile('PDS - filter.xlsx', {cellDates:true});
+
+let cessionSheet = workbook.Sheets['PDS Cessions'];
+let trustSheet = workbook.Sheets['PDS Trusts'];
+
+let cessionData = XLSX.utils.sheet_to_json(cessionSheet).filter(item => item['To be uploaded'] === 'YES');
+let trustData = XLSX.utils.sheet_to_json(trustSheet).filter(item => item['To be uploaded'] === 'YES');
+
+const filters = type == 'cession' ? cessionData : trustData;
 
 
 async function getUserAccessKey() {
@@ -226,10 +222,8 @@ async function downloadPdf(url, ym, type = 'cession') {
       const filter = filters[i];
       if (type == 'cession') {
         const clientCode = filter['PDS Client Code'];
-        const clientName = filter['Client Name'];
-        const productCode1 = filter['PDS Product Code1'];
-        const productCode2 = filter['PDS Product Code2'];
-        const cessionId = filter['Cession ID'];
+        const productCode1 = filter['PDS Product Code'];
+        const productCode2 = filter['PDS Product Code_1'];
 
         if (pdsClientCode == clientCode && (productCodeInUrl.includes(productCode1) || productCodeInUrl.includes(productCode2))) {
           isCorrect = true;
@@ -238,8 +232,6 @@ async function downloadPdf(url, ym, type = 'cession') {
       }
       else if (type == 'trust') {
         const clientCode = filter['PDS Client Code'];
-        const clientName = filter['Client Name'];
-        const bank = filter['Bank'];
 
         if (pdsClientCode == clientCode && productCodeInUrl.includes(yearMonthStr)) {
           isCorrect = true;
@@ -341,7 +333,7 @@ async function cession_trust_download() {
     if (err) throw err;
   });
 
-  await send_team.sendMessageToTeamChannel(logtxt, 'crawler');
+  // await send_team.sendMessageToTeamChannel(logtxt, 'crawler');
   
   console.log('Done');
   process.exit(0);
