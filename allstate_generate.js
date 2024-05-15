@@ -260,7 +260,7 @@ async function allstate_generate() {
     console.log('\nDone generating all reports for Month Year combo and ID.');
     console.log('\nTotal count:', total_count);
     
-    let logtxt = `${currentDate.toISOString().split('T')[0]}, allstate, generate, ${id}, ${total_count}\n`;
+    let logtxt = `${currentDate.toISOString().split('T')[0]}, allstate, ${monthValueToSelect.replace(' ', '-')}, generate, ${id}, ${total_count}\n`;
     console.log(logtxt);
     fs.appendFileSync('log.txt', logtxt);
 

@@ -411,7 +411,7 @@ async function bok() {
         console.log(`\nDone downloading all reports for ${account.username}.`);
         console.log(`Total count for ${account.username}:`, total_count);
 
-        let logtxt = `${currentDate.toISOString().split('T')[0]}, bok, download, ${account.username}, ${total_count}\n`;
+        let logtxt = `${currentDate.toISOString().split('T')[0]}, bok, ${year}-${month}, download, ${account.username}, ${total_count}\n`;
         console.log(logtxt);
         fs.appendFile('log.txt', logtxt, function (err) {
           if (err) throw err;

@@ -95,8 +95,6 @@ const year_month_list = generateMonths(startDate, endDate);
 
 const filePath = type=='cession' ? './filter_cessions.csv' : './filter_trusts.csv';
 const csv = require('csv-parser');
-const { start } = require('repl');
-const { response } = require('express');
 
 const results = [];
 const filters = []
@@ -337,7 +335,7 @@ async function cession_trust_download() {
   console.log('Total count:', total_count);
   
   const currentDate = new Date();
-  let logtxt = `${currentDate.toISOString().split('T')[0]}, pds ${type}, download, ${masterUser}, ${total_count}\n`;
+  let logtxt = `${currentDate.toISOString().split('T')[0]}, pds ${type}, ${year_month_list[0].slice(0, 4) + '-' + year_month_list[0].slice(4)}, download, ${masterUser}, ${total_count}\n`;
   console.log(logtxt);
   await fs.appendFile('log.txt', logtxt, function (err) {
     if (err) throw err;

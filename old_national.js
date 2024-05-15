@@ -474,7 +474,7 @@ async function old_national() {
 				console.log(`\nDone downloading all reports for ${account.username}.`);
 				console.log(`Total count for ${account.username}:`, total_count);
 
-				let logtxt = `${currentDate.toISOString().split('T')[0]}, oldnational, download, ${account.username}, ${total_count}, (2fa code: ${pin_code})\n`;
+				let logtxt = `${currentDate.toISOString().split('T')[0]}, oldnational, ${year}-${month}, download, ${account.username}, ${total_count}, (2fa code: ${pin_code})\n`;
 				console.log(logtxt);
 				fs.appendFile('log.txt', logtxt, function (err) {
 					if (err) throw err;
