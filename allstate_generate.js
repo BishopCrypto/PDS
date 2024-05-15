@@ -147,7 +147,7 @@ async function allstate_generate() {
   const { id, pw, monthValueToSelect } = userInput;
 
   const currentDate = new Date();
-  const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-generate-${id}-${monthValueToSelect}`;
+  const scrshot_path = currentDate.toISOString().split('.')[0].replace('T', '--').replace(/:/g, '-') + `-allstate-generate-${id}-${monthValueToSelect.replace(' ', '-')}`;
   fs.mkdirSync(`../azure-screenshots/${scrshot_path}`, { recursive: true }, (err) => {
     if (err) {
       return console.error(err);
