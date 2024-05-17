@@ -64,7 +64,7 @@ const accounts = [
   {
     username: 'HT9V297',
     password: 'OldNatverify*1',
-    groupdropdown: ['SLST00000'] // List of options for Account (TOTAL RELATIONSHIP GROUP ERROR)
+    groupdropdown: ['CBAG00005'] // List of options for Account (TOTAL RELATIONSHIP GROUP ERROR)
   },
   // ... more accounts
 ];
