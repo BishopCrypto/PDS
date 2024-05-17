@@ -59,17 +59,17 @@ const accounts = [
   {
     username: 'GA02922',
     password: 'BOKverify*1',
-    groupdropdown: ['CBAG00001', 'CBAG00002']
+    groupdropdown: ['CBAG00004']
   },
   {
     username: 'BA02DM7',
     password: 'BOKverify*2',
-    groupdropdown: ['DLST00000']
+    groupdropdown: ['CBAG00001']
   },
   {
     username: 'BA02D1R',
     password: 'BOKverify*3',
-    groupdropdown: ['DLST00000']
+    groupdropdown: ['CBAG00001']
   },
   // ... more accounts
 ];
