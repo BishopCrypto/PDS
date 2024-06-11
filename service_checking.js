@@ -32,7 +32,7 @@ for (const serviceName of serviceNames) {
           subject = `Service ${serviceName} error`;
           text = `Command error: ${stderr}`;
           console.error(text);
-          reject();
+          resolve();
         }
 
         const statusIndex = stdout.indexOf('Active:');
@@ -49,6 +49,7 @@ for (const serviceName of serviceNames) {
             subject = `Service ${serviceName} is stopped.`;
             console.log(subject);
             exec(`sudo systemctl restart ${serviceName}.service`);
+            exec(`sudo systemctl enable ${serviceName}.service`);
             console.log('Service is restarted now but Please check again');
             text += 'Service is restarted now but Please check again';
           }
@@ -57,7 +58,7 @@ for (const serviceName of serviceNames) {
           subject = `Service ${serviceName} error`;
           text = 'Error: Failed to retrieve service status information.';
           console.error(text);
-          reject();
+          resolve();
         }
       });
     });
