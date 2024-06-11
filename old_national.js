@@ -186,7 +186,7 @@ async function setCookiesAndRun(page) {
 
 async function old_national() {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: false,
     defaultViewport: null,
     devtools: false,
     args: [

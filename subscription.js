@@ -8,19 +8,25 @@ const client_secret = '2XF8Q~SuxClUSnT6.L5YH.gClVrRFa.iTKP5Nb-U';
 
 // Step 1: Get OAuth token
 async function getOAuthToken() {
-  const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
-  const data = new URLSearchParams();
-  data.append('client_id', client_id);
-  data.append('client_secret', client_secret);
-  data.append('grant_type', 'client_credentials');
-  data.append('scope', 'https://graph.microsoft.com/.default');
-  
-  const response = await axios.post(url, data, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
-  return response.data.access_token;
+  try {
+    const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+    const data = new URLSearchParams();
+    data.append('client_id', client_id);
+    data.append('client_secret', client_secret);
+    data.append('grant_type', 'client_credentials');
+    data.append('scope', 'https://graph.microsoft.com/.default');
+    
+    const response = await axios.post(url, data, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    console.log("Successfully created OAuth Token for Authentication email");
+    return response.data.access_token;  
+  } catch (error) {
+    console.log("Failed to get OAuth Token for Authentication email");
+    process.exit(1);
+  }
 }
 
 // Step 2: Create Subscription

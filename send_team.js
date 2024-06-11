@@ -18,21 +18,27 @@ const training_channelId = '19%3A19fad035a4ff42ff916968859fd96307%40thread.tacv2
 
 // Step 1: Get OAuth token
 async function getOAuthToken() {
-  const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
-  const data = new URLSearchParams();
-  data.append('client_id', client_id);
-  data.append('client_secret', client_secret);
-  data.append('grant_type', 'password');
-  data.append('scope', 'user.read openid profile offline_access');
-  data.append('username', 'Reporting@Reinsuranceassociates.onmicrosoft.com');
-  data.append('password', 'Gova522403');
-  
-  const response = await axios.post(url, data, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  });
-  return response.data.access_token;
+  try {
+    const url = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+    const data = new URLSearchParams();
+    data.append('client_id', client_id);
+    data.append('client_secret', client_secret);
+    data.append('grant_type', 'password');
+    data.append('scope', 'user.read openid profile offline_access');
+    data.append('username', 'Reporting@Reinsuranceassociates.onmicrosoft.com');
+    data.append('password', 'Gova522403');
+    
+    const response = await axios.post(url, data, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+    console.log("Successfully created OAuth Token for Reporting email");
+    return response.data.access_token;
+  } catch (error) {
+    console.log("Failed to get OAuth Token for Reporting email");
+    process.exit(1);
+  }
 }
 
 // Step 2: Sending Message

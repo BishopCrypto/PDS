@@ -4,6 +4,7 @@ const send_team = require('./send_team');
 const subscription = require('./subscription');
 
 const sendEmails = async () => {
+  console.log("Starting email_provider.js...");
   const start_time = Date.now();
   const email = await subscription.getEmails();
   const date = email.createdDateTime;
