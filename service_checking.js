@@ -2,7 +2,7 @@ const { exec } = require('child_process');
 
 const serviceName = 'emailservice';
 
-exec(`systemctl status ${serviceName}.service`, (error, stdout, stderr) => {
+exec(`sudo systemctl status ${serviceName}.service`, (error, stdout, stderr) => {
   console.log(stdout.substring(0, 100));
   console.log('=======================');
   console.log(stderr);
