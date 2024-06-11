@@ -60,6 +60,7 @@ for (const serviceName of serviceNames) {
   mailOptions['text'] = text;
   for (const toEmail of ['kingransom9411@gmail.com', 'leo636722@gmail.com']) {
     mailOptions['to'] = toEmail;
+    console.log(mailOptions);
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.error(`Error sending email to ${toEmail}: ${error.message}`);
@@ -67,5 +68,6 @@ for (const serviceName of serviceNames) {
         console.log(`Email notification sent to ${toEmail} successfully.`);
       }
     });
+    setTimeout(() => {}, 3000);
   }
 }
