@@ -70,7 +70,7 @@ for (const serviceName of serviceNames) {
       mailOptions['subject'] = subject;
       mailOptions['text'] = text;
       
-      for (const toEmail of ['kingransom9411@gmail.com', 'leo636722@gmail.com']) {
+      for (const toEmail of ['kingransom9411@gmail.com', 'monitoring@thedevelopers.dev']) {
         mailOptions['to'] = toEmail;
         console.log(mailOptions);
         
