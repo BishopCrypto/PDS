@@ -82,7 +82,7 @@ function getUserInput() {
     month = monthNames[monthsAgo.getMonth()];
     year = monthsAgo.getFullYear();
   }
-    
+  
   // Format month and year as monthValueToSelect
   const monthValueToSelect = `${month} ${year}`;
 

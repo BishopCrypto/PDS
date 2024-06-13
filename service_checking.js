@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
   service: emailService,
   auth: {
     user: 'accounts@thedevelopers.dev',
-    pass: 'fkeo qjlm ogos ipdv' // Use the generated app password here
+    pass: 'kkrf glug ilxf oyjo' // Use the generated app password here
   }
 });
 
