@@ -69,7 +69,7 @@ const accounts = [
   // ... more accounts
 ];
 
-// get bearer token fo textverified api
+// get bearer token for textverified api
 async function generateBearerToken() {
 	const url = `${textverified_server}/api/pub/v2/auth`;
 	const response = await axios.post(url, {}, {
