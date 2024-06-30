@@ -1,26 +1,11 @@
 const { exec } = require('child_process');
-const nodemailer = require('nodemailer');
+const send_team = require('./send_team');
 
-const serviceNames = ['emailservice', 'textservice'];
-const emailService = 'Gmail'; // Assuming you are using Gmail
 
-// Configure Nodemailer with the Gmail SMTP settings and your credentials
-const transporter = nodemailer.createTransport({
-  service: emailService,
-  auth: {
-    user: 'accounts@thedevelopers.dev',
-    pass: 'kkrf glug ilxf oyjo' // Use the generated app password here
-  }
-});
+const serviceNames = ['textservice'];
 
 for (const serviceName of serviceNames) {
   // Send email notification
-  let mailOptions = {
-    from: 'accounts@thedevelopers.dev',
-    to: '',
-    subject: '',
-    text: ''
-  };
   let subject = '';
   let text = '';
   let flag = false;
@@ -73,19 +58,8 @@ for (const serviceName of serviceNames) {
   executeCommand()
     .then(() => {
       if (flag) {
-        mailOptions['subject'] = subject;
-        mailOptions['text'] = text;
-        for (const toEmail of ['kingransom9411@gmail.com', 'monitoring@thedevelopers.dev']) {
-          mailOptions['to'] = toEmail;
-          console.log(mailOptions);
-          
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.error(`Error sending email to ${toEmail}: ${error.message}`);
-            } else {
-              console.log(`Email notification sent to ${toEmail} successfully.`);
-            }
-          });
+        for (const receiver_email of ['kingransom9411@gmail.com']) {
+          send_team.sendEmail(receiver_email, subject, text);
         }
       }
     })
