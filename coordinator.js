@@ -156,8 +156,37 @@ async function upload_to_api() {
     
     console.log(`\nTotal count: ${count}`);
 
-    // Prepare message
-    type = (type === 'trust' || type === 'cession') ? `pds ${type}` : type;
+    if (type === 'trust' || type === 'cession') {
+      type = `pds ${type}`;
+    }
+
+    const logData = fs.readFileSync('log.txt', 'utf8');
+    const logLines = logData.trim().split('\n');
+    const lastLogLine = logLines.reverse().find(line => line.includes(`${type}, api upload`));
+
+    if (lastLogLine) {
+      const logParts = lastLogLine.split(', ');
+      const lastLogDate = new Date(logParts[0]);
+      const lastLogMonth = lastLogDate.getMonth() + 1;
+      const lastLogCount = parseInt(logParts[1]);
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+
+      if (currentMonth - lastLogMonth === 1) {
+        const difference = Math.abs(lastLogCount - count);
+        const percentageDifference = (difference / lastLogCount) * 100;
+        console.log(`previous month=${lastLogCount}, current month=${count}`);
+
+        if (percentageDifference > 5) {
+          const subject = `${type} alert!`;
+          const text = `pdf number difference between current month and previous month is ${Math.round(percentageDifference)}%`;
+          for (const receiver_email of ['kingransom9411@gmail.com', 'monitoring@thedevelopers.dev']) {
+            send_team.sendEmail(receiver_email, subject, text);
+          }
+        }
+      }
+    }
+    
     const currentDate = new Date();
     const logtxt = `${currentDate.toISOString().split('T')[0]}, ${count} ${type}, api upload\n`;
     console.log(logtxt);
