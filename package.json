@@ -10,8 +10,5 @@
     "puppeteer": "^20.9.0",
     "twilio": "^4.22.0",
     "xlsx": "^0.18.5"
-  },
-  "name": "hammer-crawler",
-  "version": "1.0.0",
-  "type": "module"
+  }
 }
