@@ -58,7 +58,7 @@ for (const serviceName of serviceNames) {
   executeCommand()
     .then(() => {
       if (flag) {
-        for (const receiver_email of ['kingransom9411@gmail.com']) {
+        for (const receiver_email of ['kingransom9411@gmail.com', 'monitoring@thedevelopers.dev']) {
           send_team.sendEmail(receiver_email, subject, text);
         }
       }

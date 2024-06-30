@@ -36,7 +36,8 @@ async function sendEmail(receiver_email, subject, text) {
     subject: subject,
     text: text
   };
-
+  
+  console.log(subject);
   try {
     await transporter.sendMail(mail_options);
     console.log(`Email notification sent to ${receiver_email} successfully.`);
@@ -112,41 +113,18 @@ async function sendMessageToTeamChannel_old(message, channel) {
 
 
 async function sendMessageToTeamChannel(message, channel) {
-  const teamId = portal_teamId;
-  let channelId = '';
   if (channel == '2fa') {
-    channelId = twofactor_channelId;
+    await sendEmail('kingransom9411@gmail.com', 'Hammer-2FA-Text', message);
   }
   else if (channel == 'crawler') {
-    channelId = crawler_channelId;
+    await sendEmail('kingransom9411@gmail.com', 'Hammer-CrawlerReporting', message);
   }
   else if (channel == 'training') {
-    channelId = training_channelId;
+    await sendEmail('kingransom9411@gmail.com', 'Hammer-Training', message);
   }
   else {
-    channelId = general_channelId;
+    await sendEmail('kingransom9411@gmail.com', 'Hammer-General', message);
   }
-  const accessToken = await getOAuthToken();
-  const url = `https://graph.microsoft.com/v1.0/teams/${teamId}/channels/${channelId}/messages`;
-  const data = {
-    "body": {
-      "content": message,
-      "contentType": "html"
-    }
-  };
-
-  await axios.post(url, data, {
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    }
-  })
-  .then((response) => {
-    console.log('Successfully sent log to Team Channel.');
-  })
-  .catch((err) => {
-    console.log('Failed to send log to Team Channel.');
-  });
 }
 
 
