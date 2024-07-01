@@ -172,8 +172,10 @@ async function upload_to_api() {
       const lastLogCount = parseInt(logParts[1]);
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth() + 1;
+      console.log(lastLogMonth, lastLogCount);
+      console.log(currentMonth, count);
 
-      if (currentMonth - lastLogMonth === 1) {
+      if (currentMonth - lastLogMonth === 1 && lastLogCount > 0) {
         const difference = Math.abs(lastLogCount - count);
         const percentageDifference = (difference / lastLogCount) * 100;
 
