@@ -163,6 +163,7 @@ async function upload_to_api() {
     const logData = fs.readFileSync('log.txt', 'utf8');
     const logLines = logData.trim().split('\n');
     const lastLogLine = logLines.reverse().find(line => line.includes(`${type}, api upload`));
+    console.log(lastLogLine);
 
     if (lastLogLine) {
       const logParts = lastLogLine.split(', ');
@@ -175,11 +176,10 @@ async function upload_to_api() {
       if (currentMonth - lastLogMonth === 1) {
         const difference = Math.abs(lastLogCount - count);
         const percentageDifference = (difference / lastLogCount) * 100;
-        console.log(`previous month=${lastLogCount}, current month=${count}`);
 
         if (percentageDifference > 5) {
           const subject = `${type} alert!`;
-          const text = `pdf number difference between current month and previous month is ${Math.round(percentageDifference)}%`;
+          const text = `previous month=${lastLogCount}, current month=${count}`;
           for (const receiver_email of ['kingransom9411@gmail.com', 'monitoring@thedevelopers.dev']) {
             send_team.sendEmail(receiver_email, subject, text);
           }
