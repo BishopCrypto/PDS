@@ -5,6 +5,27 @@ const tenantId = '5362b414-4db3-4477-88db-8edfeca6fa42';
 const client_id = '1cec76bf-93b8-497b-a53c-70c21c2176a6';
 const client_secret = '2XF8Q~SuxClUSnT6.L5YH.gClVrRFa.iTKP5Nb-U';
 
+const drive_id = 'b!kck-pQ2_IkyTuHyKmCzyZi-h1sZ3naRNm0zqjsBoQK-91LKVrHF4R5sabQDSkMXm';
+const item_id = '01UTXNFWJLAXWXFN652RHZQFINX5QAIT6W';
+
+
+async function getDownloadUrl() {
+  try {
+    const url = `https://graph.microsoft.com/v1.0/drives/${drive_id}/items/${item_id}/children`;
+    const accessToken = await getOAuthToken();
+    const response = await axios.get(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    const downloadUrl = response.data.value[1]["@microsoft.graph.downloadUrl"];
+    return downloadUrl;
+  } catch (error) {
+    console.log("Failed to get XLSX download URL");
+    process.exit(1);
+  }
+}
+
 
 // Step 1: Get OAuth token
 async function getOAuthToken() {
@@ -125,5 +146,6 @@ async function getEmails() {
 
 module.exports = {
   getEmails: getEmails,
-  updateSubscription: updateSubscription
+  updateSubscription: updateSubscription,
+  getDownloadUrl: getDownloadUrl
 };

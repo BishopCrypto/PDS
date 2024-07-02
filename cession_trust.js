@@ -11,6 +11,7 @@ const rl = readline.createInterface({
 const { PDFDocument } = require('pdf-lib');
 
 const send_team = require('./send_team');
+const subscription = require('./subscription');
 
 const websiteUrl = 'https://www.pdsadm.com/PAnet/Account/Login';
 
@@ -95,16 +96,25 @@ const year_month_list = generateMonths(startDate, endDate);
 
 
 const XLSX = require('xlsx');
+let filters;
 
-let workbook = XLSX.readFile('PDS - filter.xlsx', {cellDates:true});
+async function getFilters() {
+  // from local file
+  // let workbook = XLSX.readFile('PDS - filter.xlsx', {cellDates:true});
 
-let cessionSheet = workbook.Sheets['PDS Cessions'];
-let trustSheet = workbook.Sheets['PDS Trusts'];
+  // from team channel file
+  const downloadUrl = await subscription.getDownloadUrl();
+  const fileData = await axios.get(downloadUrl, { responseType: 'arraybuffer' });
+  const workbook = XLSX.read(fileData.data, { type: 'buffer' });
 
-let cessionData = XLSX.utils.sheet_to_json(cessionSheet).filter(item => item['To be uploaded'] === 'YES');
-let trustData = XLSX.utils.sheet_to_json(trustSheet).filter(item => item['To be uploaded'] === 'YES');
+  let cessionSheet = workbook.Sheets['PDS Cessions'];
+  let trustSheet = workbook.Sheets['PDS Trusts'];
 
-const filters = type == 'cession' ? cessionData : trustData;
+  let cessionData = XLSX.utils.sheet_to_json(cessionSheet).filter(item => item['To be uploaded'] === 'YES');
+  let trustData = XLSX.utils.sheet_to_json(trustSheet).filter(item => item['To be uploaded'] === 'YES');
+
+  filters = type == 'cession' ? cessionData : trustData;
+}
 
 
 async function getUserAccessKey() {
@@ -280,6 +290,8 @@ async function downloadPdf(url, ym, type = 'cession') {
 
 
 async function cession_trust_download() {
+  await getFilters();
+  
   const uak = 66285;
   
   let directories = [];
